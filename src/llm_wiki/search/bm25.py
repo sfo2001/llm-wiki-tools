@@ -16,7 +16,8 @@ def _tokenize(text: str) -> list[str]:
     text = re.sub(r"^#{1,6}\s+", "", text, flags=re.MULTILINE)
     text = re.sub(r"\[\[.*?\]\]", "", text)
     text = re.sub(r"\*+|`+|_+|---+", " ", text)
-    return text.lower().split()
+    tokens = text.lower().split()
+    return [re.sub(r"[^a-z0-9]", "", t) for t in tokens if re.sub(r"[^a-z0-9]", "", t)]
 
 
 def _extract_snippet(text: str, query_tokens: list[str], length: int = 120) -> str:
@@ -53,14 +54,14 @@ class BM25Index:
         )
 
     def build(self) -> None:
-        from rank_bm25 import BM25Okapi
+        from rank_bm25 import BM25Plus
 
         self._pages = self._md_files()
         self._texts = [
             p.read_text(encoding="utf-8", errors="replace") for p in self._pages
         ]
         tokenized = [_tokenize(t) for t in self._texts]
-        self._index = BM25Okapi(tokenized)
+        self._index = BM25Plus(tokenized) if tokenized else None
 
         self._cache_path.parent.mkdir(parents=True, exist_ok=True)
         cache_data = {
@@ -72,7 +73,7 @@ class BM25Index:
         )
 
     def _load_cache(self) -> None:
-        from rank_bm25 import BM25Okapi
+        from rank_bm25 import BM25Plus
 
         data = json.loads(self._cache_path.read_text(encoding="utf-8"))
         self._pages = [Path(p) for p in data["pages"]]
@@ -81,7 +82,7 @@ class BM25Index:
             for p in self._pages
             if p.exists()
         ]
-        self._index = BM25Okapi(data["corpus"])
+        self._index = BM25Plus(data["corpus"])
 
     def _ensure_ready(self) -> None:
         if self._needs_rebuild():
@@ -93,6 +94,8 @@ class BM25Index:
         if not query.strip():
             return []
         self._ensure_ready()
+        if self._index is None:
+            return []
         tokens = _tokenize(query)
         if not tokens:
             return []
