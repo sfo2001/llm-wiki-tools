@@ -1,3 +1,4 @@
+import os
 import subprocess
 from importlib.metadata import version, PackageNotFoundError
 
@@ -13,7 +14,7 @@ def _get_git_hash() -> str:
             ["git", "rev-parse", "--short", "HEAD"],
             capture_output=True,
             text=True,
-            cwd=__file__,
+            cwd=os.path.dirname(__file__),
         )
         return result.stdout.strip() if result.returncode == 0 else "unknown"
     except Exception:
