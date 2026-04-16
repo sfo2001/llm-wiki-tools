@@ -71,3 +71,44 @@ def test_lwt_lint_writes_report_and_exits_nonzero(tmp_path):
     assert result.exit_code != 0
     assert (wiki_dir / "lint-report.md").exists()
     assert "missing" in (wiki_dir / "lint-report.md").read_text()
+
+
+# --- deploy tests ---
+from unittest.mock import patch as mock_patch
+
+
+def test_lwt_deploy_help():
+    result = CliRunner().invoke(main, ["deploy", "--help"])
+    assert result.exit_code == 0
+    assert "--target" in result.output
+    assert "local" in result.output
+    assert "docker" in result.output
+    assert "confluence" in result.output
+
+
+def test_lwt_deploy_local_starts_server(tmp_path):
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    (wiki_dir / "index.md").write_text("# Index")
+    with mock_patch("llm_wiki.deploy.local.subprocess.run"):
+        result = CliRunner().invoke(main, [
+            "deploy", "--target", "local",
+            "--wiki-dir", str(wiki_dir),
+        ])
+    assert result.exit_code == 0
+
+
+def test_lwt_deploy_confluence_dry_run(tmp_path):
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    (wiki_dir / "index.md").write_text("# Index")
+    (wiki_dir / "page-a.md").write_text("# Page A")
+    result = CliRunner().invoke(
+        main,
+        ["deploy", "--target", "confluence", "--wiki-dir", str(wiki_dir), "--dry-run"],
+        env={"CONFLUENCE_URL": "https://wiki.example.com",
+             "CONFLUENCE_TOKEN": "tok",
+             "CONFLUENCE_SPACE": "TEST"},
+    )
+    assert result.exit_code == 0
+    assert "DRY-RUN" in result.output

@@ -79,3 +79,44 @@ def lint(structural: bool, wiki_dir: str, output: str | None) -> None:
     if findings:
         click.echo(f"\nReport written to {report_path}")
         sys.exit(1)
+
+
+@main.command()
+@click.option(
+    "--target", required=True,
+    type=click.Choice(["local", "docker", "confluence"]),
+    help="Deployment target.",
+)
+@click.option("--wiki-dir", default="wiki", show_default=True)
+@click.option("--port", default=None, type=int,
+              help="Port override (default: 8080 for local, 8443 for docker).")
+@click.option(
+    "--mode", default="volume",
+    type=click.Choice(["volume", "image"]), show_default=True,
+    help="Docker mode: volume (live updates) or image (baked snapshot).",
+)
+@click.option(
+    "--dry-run/--no-dry-run", default=True, show_default=True,
+    help="Confluence: print diff without pushing (default: dry-run).",
+)
+def deploy(
+    target: str, wiki_dir: str, port: int | None, mode: str, dry_run: bool
+) -> None:
+    """Deploy wiki/ to a target (local HTTP, Docker, or Confluence)."""
+    import os
+    wiki_path = Path(wiki_dir)
+    if target == "local":
+        from llm_wiki.deploy.local import LocalBackend
+        backend = LocalBackend(wiki_path, port=port or 8080)
+    elif target == "docker":
+        from llm_wiki.deploy.docker import DockerBackend
+        backend = DockerBackend(wiki_path, port=port or 8443, mode=mode)
+    else:  # confluence
+        from llm_wiki.deploy.confluence import ConfluenceBackend
+        backend = ConfluenceBackend(
+            url=os.environ.get("CONFLUENCE_URL", ""),
+            token=os.environ.get("CONFLUENCE_TOKEN", ""),
+            space=os.environ.get("CONFLUENCE_SPACE", ""),
+            dry_run=dry_run,
+        )
+    backend.deploy(wiki_path)
