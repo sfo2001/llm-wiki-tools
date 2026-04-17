@@ -120,3 +120,21 @@ def deploy(
             dry_run=dry_run,
         )
     backend.deploy(wiki_path)
+
+
+@main.command(name="init")
+@click.argument("path", default=".")
+@click.option("--name", default="my-wiki", show_default=True,
+              help="Human-readable name for this wiki.")
+def init_cmd(path: str, name: str) -> None:
+    """Scaffold a new llm-wiki data repository."""
+    from llm_wiki.init import scaffold_data_repo
+    target = Path(path)
+    scaffold_data_repo(target, name=name)
+    click.echo(f"Initialized wiki at {target.resolve()}")
+    click.echo(f"  raw/              — drop source files here")
+    click.echo(f"  wiki/             — LLM-maintained markdown pages")
+    click.echo(f"  templates/        — page templates")
+    click.echo(f"  AGENTS.md         — agent schema (edit to customize)")
+    click.echo(f"  CLAUDE.md         — Claude Code configuration")
+    click.echo(f"  .lwt.env.example  — copy to .lwt.env and fill in credentials")

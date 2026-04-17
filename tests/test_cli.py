@@ -112,3 +112,49 @@ def test_lwt_deploy_confluence_dry_run(tmp_path):
     )
     assert result.exit_code == 0
     assert "DRY-RUN" in result.output
+
+
+# --- init tests ---
+
+def test_lwt_init_help():
+    result = CliRunner().invoke(main, ["init", "--help"])
+    assert result.exit_code == 0
+    assert "--name" in result.output
+
+
+def test_lwt_init_creates_structure(tmp_path):
+    result = CliRunner().invoke(main, [
+        "init", str(tmp_path / "mywiki"), "--name", "Test Wiki",
+    ])
+    assert result.exit_code == 0, result.output
+    wiki_path = tmp_path / "mywiki"
+    assert (wiki_path / "raw").is_dir()
+    assert (wiki_path / "wiki").is_dir()
+    assert (wiki_path / "templates").is_dir()
+    assert (wiki_path / "output").is_dir()
+    assert (wiki_path / "AGENTS.md").exists()
+    assert (wiki_path / "CLAUDE.md").exists()
+    assert (wiki_path / ".gitignore").exists()
+    assert (wiki_path / ".lwt.env.example").exists()
+
+
+def test_lwt_init_creates_all_templates(tmp_path):
+    CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
+    templates = tmp_path / "wiki" / "templates"
+    for name in ["default.md", "entity.md", "concept.md",
+                 "source-summary.md", "query-answer.md"]:
+        assert (templates / name).exists(), f"Missing template: {name}"
+
+
+def test_lwt_init_index_contains_name(tmp_path):
+    CliRunner().invoke(main, [
+        "init", str(tmp_path / "wiki"), "--name", "My Project",
+    ])
+    index = (tmp_path / "wiki" / "wiki" / "index.md").read_text()
+    assert "My Project" in index
+
+
+def test_lwt_init_gitignore_excludes_tmp(tmp_path):
+    CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
+    gitignore = (tmp_path / "wiki" / ".gitignore").read_text()
+    assert "wiki/.tmp/" in gitignore
