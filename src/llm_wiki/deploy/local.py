@@ -26,22 +26,23 @@ class LocalBackend(WikiBackend):
         if path.exists():
             path.unlink()
 
-    def _server_command(self) -> list[str]:
+    def _server_command(self, wiki_dir: Path | None = None) -> list[str]:
         """Return the best available HTTP server command."""
+        target_dir = wiki_dir if wiki_dir is not None else self.wiki_dir
         if shutil.which("mkdocs"):
             return [
                 "mkdocs", "serve",
                 "--dev-addr", f"0.0.0.0:{self.port}",
-                "--docs-dir", str(self.wiki_dir),
+                "--docs-dir", str(target_dir),
             ]
         if shutil.which("grip"):
-            return ["grip", str(self.wiki_dir), f"0.0.0.0:{self.port}"]
+            return ["grip", str(target_dir), f"0.0.0.0:{self.port}"]
         return [
             "python3", "-m", "http.server", str(self.port),
-            "--directory", str(self.wiki_dir),
+            "--directory", str(target_dir),
         ]
 
     def deploy(self, wiki_dir: Path) -> None:
-        cmd = self._server_command()
+        cmd = self._server_command(wiki_dir)
         print(f"Starting local server: {' '.join(cmd)}")
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=True)

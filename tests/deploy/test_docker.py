@@ -38,6 +38,7 @@ def test_docker_volume_command_contains_docker_run(tmp_path):
 def test_docker_image_command_contains_docker_build(tmp_path):
     wiki = tmp_path / "wiki"
     wiki.mkdir()
+    (wiki / "Dockerfile").write_text("FROM nginx:alpine")  # required by _image_command
     b = DockerBackend(wiki, port=8443, mode="image", tag="llm-wiki:latest")
     cmd = b._image_command(wiki)
     assert "docker" in cmd
@@ -59,6 +60,7 @@ def test_docker_deploy_volume_calls_docker_run(tmp_path):
 def test_docker_deploy_image_calls_docker_build(tmp_path):
     wiki = tmp_path / "wiki"
     wiki.mkdir()
+    (wiki / "Dockerfile").write_text("FROM nginx:alpine")  # required
     b = DockerBackend(wiki, mode="image")
     with patch("llm_wiki.deploy.docker.subprocess.run") as mock_run:
         b.deploy(wiki)

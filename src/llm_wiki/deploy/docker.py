@@ -45,10 +45,16 @@ class DockerBackend(WikiBackend):
         ]
 
     def _image_command(self, wiki_dir: Path) -> list[str]:
+        # NOTE: Image mode requires a Dockerfile at wiki_dir/Dockerfile.
+        # Generate one or place it there before running lwt deploy --mode image.
+        if not (wiki_dir / "Dockerfile").exists():
+            raise FileNotFoundError(
+                f"Docker image mode requires a Dockerfile at {wiki_dir / 'Dockerfile'}.\n"
+                "Place a Dockerfile in your wiki directory, or use --mode volume instead."
+            )
         return [
             "docker", "build",
             "-t", self.tag,
-            "--build-arg", f"WIKI_SRC={wiki_dir.resolve()}",
             str(wiki_dir.resolve()),
         ]
 

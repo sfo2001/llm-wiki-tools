@@ -113,12 +113,18 @@ def deploy(
         backend = DockerBackend(wiki_path, port=port or 8443, mode=mode)
     else:  # confluence
         from llm_wiki.deploy.confluence import ConfluenceBackend
-        backend = ConfluenceBackend(
-            url=os.environ.get("CONFLUENCE_URL", ""),
-            token=os.environ.get("CONFLUENCE_TOKEN", ""),
-            space=os.environ.get("CONFLUENCE_SPACE", ""),
-            dry_run=dry_run,
-        )
+        url = os.environ.get("CONFLUENCE_URL", "")
+        token = os.environ.get("CONFLUENCE_TOKEN", "")
+        space = os.environ.get("CONFLUENCE_SPACE", "")
+        if not dry_run and not all([url, token, space]):
+            missing = [k for k, v in [
+                ("CONFLUENCE_URL", url), ("CONFLUENCE_TOKEN", token), ("CONFLUENCE_SPACE", space)
+            ] if not v]
+            raise click.UsageError(
+                f"Missing required env vars for live Confluence deploy: {', '.join(missing)}\n"
+                "Set them in .lwt.env or export them, or use --dry-run."
+            )
+        backend = ConfluenceBackend(url=url, token=token, space=space, dry_run=dry_run)
     backend.deploy(wiki_path)
 
 
