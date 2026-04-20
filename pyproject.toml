@@ -26,6 +26,9 @@ dev = [
     "fpdf2>=2.7",
     "responses>=0.25",
 ]
+mkdocs = [
+    "mkdocs-material>=9.5",
+]
 
 [project.scripts]
 lwt = "llm_wiki.cli:main"
