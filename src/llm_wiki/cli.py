@@ -84,12 +84,12 @@ def lint(structural: bool, wiki_dir: str, output: str | None) -> None:
 @main.command()
 @click.option(
     "--target", required=True,
-    type=click.Choice(["local", "docker", "confluence"]),
+    type=click.Choice(["local", "docker", "confluence", "mkdocs"]),
     help="Deployment target.",
 )
 @click.option("--wiki-dir", default="wiki", show_default=True)
 @click.option("--port", default=None, type=int,
-              help="Port override (default: 8080 for local, 8443 for docker).")
+              help="Port override (default: 8080 local, 8443 docker, 8000 mkdocs).")
 @click.option(
     "--mode", default="volume",
     type=click.Choice(["volume", "image"]), show_default=True,
@@ -99,10 +99,14 @@ def lint(structural: bool, wiki_dir: str, output: str | None) -> None:
     "--dry-run/--no-dry-run", default=True, show_default=True,
     help="Confluence: print diff without pushing (default: dry-run).",
 )
+@click.option(
+    "--build", is_flag=True, default=False,
+    help="MkDocs: build static site instead of serving (default: serve).",
+)
 def deploy(
-    target: str, wiki_dir: str, port: int | None, mode: str, dry_run: bool
+    target: str, wiki_dir: str, port: int | None, mode: str, dry_run: bool, build: bool
 ) -> None:
-    """Deploy wiki/ to a target (local HTTP, Docker, or Confluence)."""
+    """Deploy wiki/ to a target (local HTTP, Docker, Confluence, or MkDocs Material)."""
     import os
     wiki_path = Path(wiki_dir)
     if target == "local":
@@ -111,6 +115,11 @@ def deploy(
     elif target == "docker":
         from llm_wiki.deploy.docker import DockerBackend
         backend = DockerBackend(wiki_path, port=port or 8443, mode=mode)
+    elif target == "mkdocs":
+        from llm_wiki.deploy.mkdocs_backend import MkdocsBackend
+        resolved_name = wiki_path.resolve().parent.name.replace("-", " ").title()
+        name = resolved_name or "Wiki"
+        backend = MkdocsBackend(wiki_path, port=port or 8000, name=name, build=build)
     else:  # confluence
         from llm_wiki.deploy.confluence import ConfluenceBackend
         url = os.environ.get("CONFLUENCE_URL", "")

@@ -158,3 +158,53 @@ def test_lwt_init_gitignore_excludes_tmp(tmp_path):
     CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
     gitignore = (tmp_path / "wiki" / ".gitignore").read_text()
     assert "wiki/.tmp/" in gitignore
+
+
+# --- mkdocs deploy tests ---
+
+def test_lwt_deploy_mkdocs_in_help():
+    result = CliRunner().invoke(main, ["deploy", "--help"])
+    assert result.exit_code == 0
+    assert "mkdocs" in result.output
+
+
+def test_lwt_deploy_mkdocs_serve(tmp_path):
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    (wiki_dir / "index.md").write_text("# Index")
+    with mock_patch("llm_wiki.deploy.mkdocs_backend.subprocess.run"):
+        result = CliRunner().invoke(main, [
+            "deploy", "--target", "mkdocs",
+            "--wiki-dir", str(wiki_dir),
+        ])
+    assert result.exit_code == 0
+
+
+def test_lwt_deploy_mkdocs_build(tmp_path):
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    (wiki_dir / "index.md").write_text("# Index")
+    with mock_patch("llm_wiki.deploy.mkdocs_backend.subprocess.run") as mock_run:
+        result = CliRunner().invoke(main, [
+            "deploy", "--target", "mkdocs",
+            "--wiki-dir", str(wiki_dir),
+            "--build",
+        ])
+    assert result.exit_code == 0
+    cmd = mock_run.call_args[0][0]
+    assert "build" in cmd
+
+
+def test_lwt_deploy_mkdocs_port_override(tmp_path):
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    (wiki_dir / "index.md").write_text("# Index")
+    with mock_patch("llm_wiki.deploy.mkdocs_backend.subprocess.run") as mock_run:
+        result = CliRunner().invoke(main, [
+            "deploy", "--target", "mkdocs",
+            "--wiki-dir", str(wiki_dir),
+            "--port", "9000",
+        ])
+    assert result.exit_code == 0
+    cmd = mock_run.call_args[0][0]
+    assert "9000" in " ".join(str(a) for a in cmd)

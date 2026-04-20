@@ -60,6 +60,7 @@ def test_mkdocs_deploy_serve_calls_mkdocs_serve(tmp_path):
     cmd = mock_run.call_args[0][0]
     assert "mkdocs" in cmd and "serve" in cmd
     assert "9000" in " ".join(str(a) for a in cmd)
+    assert (tmp_path / "mkdocs.yml").exists()  # ← add this line
 
 
 def test_mkdocs_deploy_build_calls_mkdocs_build(tmp_path):

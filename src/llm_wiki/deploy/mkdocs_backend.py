@@ -68,23 +68,21 @@ class MkdocsBackend(WikiBackend):
     def _mkdocs_yml(self) -> Path:
         return self._repo_dir / "mkdocs.yml"
 
-    def _ensure_mkdocs_yml(self) -> None:
-        """Write mkdocs.yml beside wiki/ if one does not already exist."""
-        if self._mkdocs_yml.exists():
-            return
-        self._repo_dir.mkdir(parents=True, exist_ok=True)
-        self._mkdocs_yml.write_text(
-            _MKDOCS_YML_TEMPLATE.format(name=self.name), encoding="utf-8"
-        )
-
-    def deploy(self, wiki_dir: Path) -> None:
-        repo_dir = wiki_dir.parent
+    def _ensure_mkdocs_yml(self, repo_dir: Path | None = None) -> Path:
+        """Write mkdocs.yml beside wiki/ if absent. Returns its path."""
+        if repo_dir is None:
+            repo_dir = self._repo_dir
         mkdocs_yml = repo_dir / "mkdocs.yml"
         if not mkdocs_yml.exists():
             repo_dir.mkdir(parents=True, exist_ok=True)
             mkdocs_yml.write_text(
                 _MKDOCS_YML_TEMPLATE.format(name=self.name), encoding="utf-8"
             )
+        return mkdocs_yml
+
+    def deploy(self, wiki_dir: Path) -> None:
+        repo_dir = wiki_dir.parent
+        mkdocs_yml = self._ensure_mkdocs_yml(repo_dir)
         if self.build:
             cmd = [
                 "mkdocs", "build",

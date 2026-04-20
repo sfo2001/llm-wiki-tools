@@ -11,13 +11,28 @@ confirm `--no-dry-run` explicitly — the default is dry-run.
 
 ## Target reference
 
-### Local HTTP server
+### MkDocs Material (recommended for personal use)
+
+```bash
+# Serve (blocking — runs until Ctrl-C):
+lwt deploy --target mkdocs --wiki-dir wiki [--port 8000]
+
+# Build static site:
+lwt deploy --target mkdocs --wiki-dir wiki --build
+```
+
+Auto-generates `mkdocs.yml` beside `wiki/` on first run (skips if already present).
+The site name is derived from the data-repo directory name. To customise, edit `mkdocs.yml` directly.
+Requires `mkdocs-material` installed: `pip install "llm-wiki-tools[mkdocs]"`.
+
+### Local HTTP server (fallback, no install required)
 
 ```bash
 lwt deploy --target local --wiki-dir wiki [--port 8080]
 ```
 
 Detects mkdocs → grip → stdlib http.server (priority order). Blocking — runs until Ctrl-C.
+Serves raw markdown — no search, no rendered navigation.
 
 ### Docker
 
@@ -25,7 +40,7 @@ Detects mkdocs → grip → stdlib http.server (priority order). Blocking — ru
 # Volume mode (live updates — wiki/ on disk):
 lwt deploy --target docker --wiki-dir wiki --mode volume [--port 8443]
 
-# Image mode (baked snapshot):
+# Image mode (baked snapshot — requires Dockerfile in wiki/):
 lwt deploy --target docker --wiki-dir wiki --mode image [--port 8443]
 ```
 
