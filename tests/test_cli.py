@@ -192,7 +192,7 @@ def test_lwt_deploy_mkdocs_build(tmp_path):
         ])
     assert result.exit_code == 0
     cmd = mock_run.call_args[0][0]
-    assert "build" in cmd
+    assert "build" in " ".join(str(a) for a in cmd)
 
 
 def test_lwt_deploy_mkdocs_port_override(tmp_path):

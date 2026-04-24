@@ -58,9 +58,10 @@ def test_mkdocs_deploy_serve_calls_mkdocs_serve(tmp_path):
         b.deploy(tmp_path / "wiki")
     mock_run.assert_called_once()
     cmd = mock_run.call_args[0][0]
-    assert "mkdocs" in cmd and "serve" in cmd
-    assert "9000" in " ".join(str(a) for a in cmd)
-    assert (tmp_path / "mkdocs.yml").exists()  # ← add this line
+    cmd_str = " ".join(str(a) for a in cmd)
+    assert "mkdocs" in cmd_str and "serve" in cmd_str
+    assert "9000" in cmd_str
+    assert (tmp_path / "mkdocs.yml").exists()
 
 
 def test_mkdocs_deploy_build_calls_mkdocs_build(tmp_path):
@@ -69,4 +70,5 @@ def test_mkdocs_deploy_build_calls_mkdocs_build(tmp_path):
         b.deploy(tmp_path / "wiki")
     mock_run.assert_called_once()
     cmd = mock_run.call_args[0][0]
-    assert "mkdocs" in cmd and "build" in cmd
+    cmd_str = " ".join(str(a) for a in cmd)
+    assert "mkdocs" in cmd_str and "build" in cmd_str

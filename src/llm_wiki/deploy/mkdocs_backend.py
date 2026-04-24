@@ -1,4 +1,5 @@
 import subprocess
+import sys
 from pathlib import Path
 
 from llm_wiki.deploy.base import WikiBackend
@@ -80,18 +81,25 @@ class MkdocsBackend(WikiBackend):
             )
         return mkdocs_yml
 
+    @staticmethod
+    def _mkdocs_bin() -> str:
+        """Return mkdocs co-located with current Python (venv-aware), or 'mkdocs'."""
+        candidate = Path(sys.executable).parent / "mkdocs"
+        return str(candidate) if candidate.exists() else "mkdocs"
+
     def deploy(self, wiki_dir: Path) -> None:
         repo_dir = wiki_dir.parent
         mkdocs_yml = self._ensure_mkdocs_yml(repo_dir)
+        mkdocs = self._mkdocs_bin()
         if self.build:
             cmd = [
-                "mkdocs", "build",
+                mkdocs, "build",
                 "--config-file", str(mkdocs_yml),
                 "--clean",
             ]
         else:
             cmd = [
-                "mkdocs", "serve",
+                mkdocs, "serve",
                 "--config-file", str(mkdocs_yml),
                 "--dev-addr", f"0.0.0.0:{self.port}",
             ]
