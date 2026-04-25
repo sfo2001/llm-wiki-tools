@@ -1,6 +1,6 @@
 ---
 title: ""
-template: query-answer.md
+lwt_template: query-answer.md
 query: ""
 sources-consulted: []
 lwt-version: ""

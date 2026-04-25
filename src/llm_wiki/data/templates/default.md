@@ -1,6 +1,6 @@
 ---
 title: ""
-template: default.md
+lwt_template: default.md
 sources: []
 lwt-version: ""
 lwt-git-hash: ""

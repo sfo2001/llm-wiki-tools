@@ -1,6 +1,6 @@
 ---
 title: ""
-template: entity.md
+lwt_template: entity.md
 entity-type: ""     # person | system | product | organisation | other
 sources: []
 lwt-version: ""

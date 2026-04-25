@@ -1,6 +1,6 @@
 ---
 title: ""
-template: concept.md
+lwt_template: concept.md
 sources: []
 lwt-version: ""
 lwt-git-hash: ""

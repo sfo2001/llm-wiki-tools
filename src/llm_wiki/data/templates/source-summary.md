@@ -1,6 +1,6 @@
 ---
 title: ""
-template: source-summary.md
+lwt_template: source-summary.md
 source: ""
 source-sha: ""
 ingest-command: ""
