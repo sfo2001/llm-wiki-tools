@@ -1,0 +1,126 @@
+# __NAME__ Wiki
+
+A personal knowledge base maintained by an AI assistant (Claude).
+Sources live in `raw/`. The AI writes and maintains all wiki pages in `wiki/`.
+
+---
+
+## Quick start
+
+### 1. Install lwt (one time)
+
+**Linux / Mac:**
+```bash
+pip install "llm-wiki-tools[mkdocs]"
+```
+
+**Windows:**
+```powershell
+pip install "llm-wiki-tools[mkdocs]"
+```
+
+Verify: `lwt --version`
+
+---
+
+### 2. Drop a source into `raw/`
+
+Supported: PDF, Word (.docx), PowerPoint (.pptx), plain text, Markdown, web URLs.
+
+```
+raw/
+  my-paper.pdf
+  meeting-notes.docx
+```
+
+---
+
+### 3. Convert it
+
+**Linux / Mac:**
+```bash
+./run.sh ingest raw/my-paper.pdf
+```
+
+**Windows:**
+```powershell
+.\run.ps1 ingest raw\my-paper.pdf
+```
+
+This converts the source to a readable markdown file in `wiki/.tmp/`.
+It does **not** write any wiki pages — that's the AI's job.
+
+---
+
+### 4. Let the AI build the wiki pages
+
+Open Claude Code in **this directory**:
+
+```bash
+claude
+```
+
+Then tell it what you just ingested, for example:
+
+> "I ingested raw/my-paper.pdf — please process it."
+
+Claude will read the converted file, discuss the key ideas with you, and write
+wiki pages in `wiki/`.
+
+---
+
+### 5. Browse the wiki
+
+**Linux / Mac:**
+```bash
+./run.sh serve
+```
+
+**Windows:**
+```powershell
+.\run.ps1 serve
+```
+
+Opens at **http://localhost:8000** — full-text search included.
+
+To build a static site instead of serving live:
+```bash
+./run.sh build     # → .build/site/index.html
+```
+
+---
+
+## Directory layout
+
+| Path | Owner | What it is |
+|------|-------|-----------|
+| `raw/` | You | Original source files. Never edited. |
+| `wiki/` | AI | The wiki. Don't edit by hand. |
+| `wiki/.tmp/` | lwt | Converted sources waiting to be processed. |
+| `templates/` | Shared | Page templates the AI uses when writing. |
+| `skills/` | lwt | Workflow instructions loaded by Claude automatically. |
+| `AGENTS.md` | lwt | AI schema — what the AI is and how it works. |
+| `CLAUDE.md` | lwt | Claude Code configuration — loaded on `claude` startup. |
+| `.lwt.env.example` | You | Copy to `.lwt.env` and fill in credentials (Confluence etc.). |
+
+---
+
+## Common operations
+
+```bash
+# Search the wiki
+./run.sh search "transformer architecture"
+
+# Check for broken links and orphaned pages
+./run.sh lint
+
+# Ingest a web page
+./run.sh ingest https://example.com/article
+```
+
+---
+
+## Sharing this wiki
+
+Zip or git-push the whole directory. The recipient needs to install lwt
+(step 1 above) — everything else is self-contained.

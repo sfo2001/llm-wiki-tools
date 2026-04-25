@@ -53,3 +53,9 @@ def scaffold_data_repo(target_dir: Path, name: str = "my-wiki") -> None:
     (target_dir / ".lwt.env.example").write_bytes(
         (_DATA_DIR / ".lwt.env.example").read_bytes()
     )
+
+    # Human-facing HOWTO
+    readme_template = (_DATA_DIR / "README.md.template").read_text(encoding="utf-8")
+    (target_dir / "README.md").write_text(
+        readme_template.replace("__NAME__", name), encoding="utf-8"
+    )

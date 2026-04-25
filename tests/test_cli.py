@@ -231,3 +231,25 @@ def test_lwt_init_skills_ingest_not_empty(tmp_path):
     assert result.exit_code == 0, result.output
     content = (tmp_path / "wiki" / "skills" / "ingest.md").read_text()
     assert "lwt ingest" in content
+
+
+# --- init scaffold: README.md ---
+
+def test_lwt_init_creates_readme(tmp_path):
+    result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki"), "--name", "My Research"])
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "wiki" / "README.md").exists()
+
+
+def test_lwt_init_readme_contains_name(tmp_path):
+    result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki"), "--name", "My Research"])
+    assert result.exit_code == 0, result.output
+    content = (tmp_path / "wiki" / "README.md").read_text()
+    assert "My Research" in content
+
+
+def test_lwt_init_readme_contains_run_sh(tmp_path):
+    result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
+    assert result.exit_code == 0, result.output
+    content = (tmp_path / "wiki" / "README.md").read_text()
+    assert "run.sh" in content
