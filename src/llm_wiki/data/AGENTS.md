@@ -81,6 +81,7 @@ leads to the same workflow:
 
 - Every page uses a template from templates/
 - Every page has YAML frontmatter with traceability fields
+- Frontmatter key for template traceability: `lwt_template: <template-name>.md` (**not** `template:` — that key is reserved by MkDocs and will break the site)
 - Every page footer: lwt version, git hash, date, template name
 - Cross-links: [[page-name]] syntax
 - wiki/index.md: updated on every write, one line per page with summary
