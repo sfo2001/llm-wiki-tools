@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 _DATA_DIR = Path(__file__).parent / "data"
@@ -59,3 +60,8 @@ def scaffold_data_repo(target_dir: Path, name: str = "my-wiki") -> None:
     (target_dir / "README.md").write_text(
         readme_template.replace("__NAME__", name), encoding="utf-8"
     )
+
+    # Wrapper scripts
+    (target_dir / "run.sh").write_bytes((_DATA_DIR / "run.sh").read_bytes())
+    os.chmod(target_dir / "run.sh", 0o755)
+    (target_dir / "run.ps1").write_bytes((_DATA_DIR / "run.ps1").read_bytes())

@@ -1,3 +1,4 @@
+import os
 from click.testing import CliRunner
 from llm_wiki.cli import main
 
@@ -254,3 +255,23 @@ def test_lwt_init_readme_contains_run_sh(tmp_path):
     assert result.exit_code == 0, result.output
     content = (tmp_path / "wiki" / "README.md").read_text()
     assert "run.sh" in content
+
+
+# --- init scaffold: run scripts ---
+
+def test_lwt_init_creates_run_sh(tmp_path):
+    result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "wiki" / "run.sh").exists()
+
+
+def test_lwt_init_run_sh_is_executable(tmp_path):
+    result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
+    assert result.exit_code == 0, result.output
+    assert os.access(tmp_path / "wiki" / "run.sh", os.X_OK)
+
+
+def test_lwt_init_creates_run_ps1(tmp_path):
+    result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "wiki" / "run.ps1").exists()
