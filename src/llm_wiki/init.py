@@ -35,6 +35,14 @@ def scaffold_data_repo(target_dir: Path, name: str = "my-wiki") -> None:
     ]:
         (templates_dst / tmpl).write_bytes((templates_src / tmpl).read_bytes())
 
+    # Skills (bundled — satisfies CLAUDE.md @path references)
+    skills_dst = target_dir / "skills"
+    skills_dst.mkdir(exist_ok=True)
+    for skill in ["ingest.md", "query.md", "lint.md", "deploy.md"]:
+        (skills_dst / skill).write_bytes(
+            (_DATA_DIR / "skills" / skill).read_bytes()
+        )
+
     # Schema files
     (target_dir / "AGENTS.md").write_bytes((_DATA_DIR / "AGENTS.md").read_bytes())
     (target_dir / "CLAUDE.md").write_bytes((_DATA_DIR / "CLAUDE.md").read_bytes())

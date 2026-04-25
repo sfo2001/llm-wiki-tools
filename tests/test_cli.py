@@ -208,3 +208,23 @@ def test_lwt_deploy_mkdocs_port_override(tmp_path):
     assert result.exit_code == 0
     cmd = mock_run.call_args[0][0]
     assert "9000" in " ".join(str(a) for a in cmd)
+
+
+# --- init scaffold: skills/ ---
+
+def test_lwt_init_creates_skills_dir(tmp_path):
+    CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
+    assert (tmp_path / "wiki" / "skills").is_dir()
+
+
+def test_lwt_init_skills_has_four_files(tmp_path):
+    CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
+    skills = tmp_path / "wiki" / "skills"
+    for name in ["ingest.md", "query.md", "lint.md", "deploy.md"]:
+        assert (skills / name).exists(), f"Missing skill: {name}"
+
+
+def test_lwt_init_skills_ingest_not_empty(tmp_path):
+    CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
+    content = (tmp_path / "wiki" / "skills" / "ingest.md").read_text()
+    assert "lwt ingest" in content
