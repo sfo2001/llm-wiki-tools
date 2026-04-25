@@ -1,10 +1,19 @@
 import requests
 
+_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xhtml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+}
+
 
 def _try_trafilatura(url: str) -> str | None:
     try:
         import trafilatura
-        downloaded = trafilatura.fetch_url(url)
+        downloaded = trafilatura.fetch_url(url, config=_trafilatura_config())
         if not downloaded:
             return None
         result = trafilatura.extract(downloaded, output_format="markdown",
@@ -14,11 +23,20 @@ def _try_trafilatura(url: str) -> str | None:
         return None
 
 
+def _trafilatura_config():
+    try:
+        from trafilatura.settings import use_config
+        cfg = use_config()
+        cfg.set("DEFAULT", "USER_AGENTS", _HEADERS["User-Agent"])
+        return cfg
+    except Exception:
+        return None
+
+
 def _try_requests(url: str) -> str:
     """Fetch URL and convert HTML to markdown via html2text."""
     import html2text
-    response = requests.get(url, timeout=30,
-                            headers={"User-Agent": "lwt/1.0 (llm-wiki-tools)"})
+    response = requests.get(url, timeout=30, headers=_HEADERS)
     if response.status_code != 200:
         raise RuntimeError(f"HTTP {response.status_code} fetching {url}")
     h = html2text.HTML2Text()
