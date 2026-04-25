@@ -42,16 +42,21 @@ cross-referencing, filing, and bookkeeping.
 
 ### Ingest
 
-1. Run: `lwt ingest <file-or-url>`
-2. Read the summary line (path, lines, sections, backend)
-3. Small doc (< 200 lines): read full temp file
-4. Large doc: read in chunks (offset/limit) or dispatch sub-agent per section
-5. Discuss key takeaways with user before writing anything
-6. Select template: source-summary.md for ingested sources
-7. Write/update wiki pages — copy traceability frontmatter from temp file header
-8. One source typically touches 5–15 wiki pages (summary + entity/concept updates)
-9. Update wiki/index.md, append to wiki/log.md:
-   `## [YYYY-MM-DD] ingest | <source title>`
+The human typically runs `lwt ingest` themselves, then opens Claude and says
+"I ingested raw/file.pdf" or "process the file I just ingested". Either path
+leads to the same workflow:
+
+1. If `lwt ingest` not yet run: `lwt ingest <file-or-url> --wiki-dir wiki`
+2. Read the summary output (path, lines, sections, backend)
+3. **Small doc (< 200 lines):** read full temp file in one pass
+4. **Large doc (200–500 lines):** read in chunks using offset/limit
+5. **Very large doc (> 500 lines):** dispatch sub-agents per section, synthesize
+6. Discuss key takeaways with user before writing anything
+7. Select template: source-summary.md for ingested sources
+8. Write/update wiki pages — copy traceability frontmatter from temp file header
+9. Typical scope: 1 source-summary + 3–10 entity/concept page updates
+10. Update wiki/index.md, append to wiki/log.md:
+    `## [YYYY-MM-DD] ingest | <source title>`
 
 ### Lint
 
@@ -65,8 +70,12 @@ cross-referencing, filing, and bookkeeping.
 ### Deploy
 
 1. Confirm target with user before running
-2. Run: `lwt deploy --target <local|docker|confluence> [options]`
-3. Confluence is stub — dry-run only unless user confirms --no-dry-run
+2. Run the appropriate command:
+   - `lwt deploy --target mkdocs --wiki-dir wiki` — MkDocs Material site (recommended, requires `pip install "llm-wiki-tools[mkdocs]"`)
+   - `lwt deploy --target mkdocs --wiki-dir wiki --build` — build static site to `.build/site/`
+   - `lwt deploy --target local --wiki-dir wiki` — plain HTTP fallback
+   - `lwt deploy --target docker --wiki-dir wiki --mode volume`
+3. Confluence is a stub — dry-run only unless user confirms `--no-dry-run`
 
 ## Wiki page conventions
 
