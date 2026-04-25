@@ -1,25 +1,26 @@
 #!/usr/bin/env bash
 # run.sh — lwt wrapper for this wiki. Usage: ./run.sh <command> [args]
 set -e
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 CMD=${1:-help}
 shift 2>/dev/null || true
 
 case "$CMD" in
   ingest)
-    lwt ingest "$@" --wiki-dir wiki
+    lwt ingest "$@" --wiki-dir "$SCRIPT_DIR/wiki"
     ;;
   serve)
-    lwt deploy --target mkdocs --wiki-dir wiki "$@"
+    lwt deploy --target mkdocs --wiki-dir "$SCRIPT_DIR/wiki" "$@"
     ;;
   build)
-    lwt deploy --target mkdocs --build --wiki-dir wiki "$@"
+    lwt deploy --target mkdocs --build --wiki-dir "$SCRIPT_DIR/wiki" "$@"
     ;;
   lint)
-    lwt lint --structural --wiki-dir wiki
+    lwt lint --structural --wiki-dir "$SCRIPT_DIR/wiki" "$@"
     ;;
   search)
-    lwt search "$@" --wiki-dir wiki
+    lwt search "$@" --wiki-dir "$SCRIPT_DIR/wiki"
     ;;
   help|--help|-h|*)
     echo "Usage: ./run.sh <command> [args]"

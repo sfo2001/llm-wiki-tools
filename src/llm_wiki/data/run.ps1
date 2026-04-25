@@ -1,15 +1,15 @@
 # run.ps1 — lwt wrapper for this wiki. Usage: .\run.ps1 <command> [args]
 param(
     [string]$Command = "help",
-    [Parameter(ValueFromRemainingArguments=$true)]$Rest
+    [Parameter(ValueFromRemainingArguments=$true)][string[]]$Rest
 )
 
 switch ($Command) {
-    "ingest" { lwt ingest @Rest --wiki-dir wiki }
-    "serve"  { lwt deploy --target mkdocs --wiki-dir wiki @Rest }
-    "build"  { lwt deploy --target mkdocs --build --wiki-dir wiki @Rest }
-    "lint"   { lwt lint --structural --wiki-dir wiki }
-    "search" { lwt search @Rest --wiki-dir wiki }
+    "ingest" { lwt ingest @Rest --wiki-dir "$PSScriptRoot\wiki" }
+    "serve"  { lwt deploy --target mkdocs --wiki-dir "$PSScriptRoot\wiki" @Rest }
+    "build"  { lwt deploy --target mkdocs --build --wiki-dir "$PSScriptRoot\wiki" @Rest }
+    "lint"   { lwt lint --structural --wiki-dir "$PSScriptRoot\wiki" }
+    "search" { lwt search @Rest --wiki-dir "$PSScriptRoot\wiki" }
     default  {
         Write-Host "Usage: .\run.ps1 <command> [args]"
         Write-Host ""
