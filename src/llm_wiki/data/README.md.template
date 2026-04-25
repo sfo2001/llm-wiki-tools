@@ -31,6 +31,7 @@ Supported: PDF, Word (.docx), PowerPoint (.pptx), plain text, Markdown, web URLs
 raw/
   my-paper.pdf
   meeting-notes.docx
+  https://example.com/article   ← paste a URL directly as the argument
 ```
 
 ---

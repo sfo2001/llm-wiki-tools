@@ -246,6 +246,7 @@ def test_lwt_init_readme_contains_name(tmp_path):
     assert result.exit_code == 0, result.output
     content = (tmp_path / "wiki" / "README.md").read_text()
     assert "My Research" in content
+    assert "__NAME__" not in content
 
 
 def test_lwt_init_readme_contains_run_sh(tmp_path):
