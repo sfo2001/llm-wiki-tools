@@ -8,7 +8,7 @@ switch ($Command) {
     "ingest" { lwt ingest @Rest --wiki-dir "$PSScriptRoot\wiki" }
     "serve"  { lwt deploy --target mkdocs --wiki-dir "$PSScriptRoot\wiki" @Rest }
     "build"  { lwt deploy --target mkdocs --build --wiki-dir "$PSScriptRoot\wiki" @Rest }
-    "lint"   { lwt lint --structural --wiki-dir "$PSScriptRoot\wiki" }
+    "lint"   { lwt lint --structural --wiki-dir "$PSScriptRoot\wiki" @Rest }
     "search" { lwt search @Rest --wiki-dir "$PSScriptRoot\wiki" }
     default  {
         Write-Host "Usage: .\run.ps1 <command> [args]"
