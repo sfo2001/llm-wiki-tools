@@ -1,112 +1,145 @@
 ---
 project: llm-wiki-tools
-last_updated: 2026-04-19
+last_updated: 2026-04-26
 ---
 
 # llm-wiki-tools — Runbook
 
-`lwt` is a one-shot CLI, not a long-running service. "Start" means
-install and invoke; "stop" only applies to the `lwt deploy` subcommand
-which runs a foreground server.
+`llm-wiki-tools` v0.1.0 is implemented. The `lwt` CLI is usable today from `/path/to/llm-wiki-tools`.
 
 ## Install
 
 ```bash
+# Development install (editable, with test deps):
 cd /path/to/llm-wiki-tools
-python -m venv .venv
-source .venv/bin/activate
-pip install -e '.[dev]'
-lwt --version
+pip install -e ".[dev]"
+
+# With MkDocs Material (recommended deploy target):
+pip install -e ".[dev,mkdocs]"
+# or after a release: pip install "llm-wiki-tools[mkdocs]"
+
+# Verify:
+lwt --help
 ```
 
-## Start (deploy target)
+## Start a new wiki
 
 ```bash
-cd <your-wiki-data-repo>
-lwt deploy --target local               # mkdocs/grip/http.server on :8080
-lwt deploy --target docker --mode volume  # nginx:alpine, wiki/ mounted ro, :8443
-lwt deploy --target confluence          # dry-run list of pages
-lwt deploy --target confluence --no-dry-run   # live push (needs env vars)
+lwt init ~/devel/my-wiki --name "My Research Wiki"
+cd ~/devel/my-wiki
+git init && git add . && git commit -m "chore: lwt init"
 ```
 
-## Stop
+Scaffold creates: `raw/`, `wiki/index.md`, `wiki/queries/`, `wiki/log.md`, `templates/`, `AGENTS.md`, `CLAUDE.md`, `.gitignore`, `.lwt.env.example`, `README.md`, `run.sh`, `run.ps1`, `skills/`.
 
-`local` and `docker --mode volume` run in the foreground — `Ctrl-C`
-the process. For the docker backend the `subprocess.run(["docker", "run", "-d", ...])`
-returns a container id; stop it with:
+Human entry point: `./run.sh help` or `./run.ps1 help`.
+
+## Ingest a source
 
 ```bash
-docker ps --filter ancestor=nginx:alpine
-docker stop <container-id>
+# Local file (PDF, DOCX, PPTX, markdown, text):
+lwt ingest raw/paper.pdf --wiki-dir wiki
+
+# Web URL:
+lwt ingest https://example.com/article --wiki-dir wiki
+
+# Preview without writing (stdout):
+lwt ingest raw/paper.pdf --wiki-dir wiki --output -
 ```
 
-The CLI subcommands `ingest` / `search` / `lint` / `init` exit when
-done; there is nothing to stop.
+Output lands in `wiki/.tmp/<date>_<filename>.md` with traceability frontmatter. The LLM then reads this and updates `wiki/` pages.
+
+## Search the wiki
+
+```bash
+# BM25 keyword search (after LLM has populated wiki/):
+lwt search "BM25 ranking" --wiki-dir wiki
+
+# More results:
+lwt search "neural network" --wiki-dir wiki --top 10
+```
+
+## Lint
+
+```bash
+# Structural lint — broken links, orphans, missing pages:
+lwt lint --structural --wiki-dir wiki
+
+# All lint modes:
+lwt lint --wiki-dir wiki
+```
+
+Findings format: `wiki/page.md:12: broken link to 'concepts/foo.md'`. Zero findings = clean.
+
+## Deploy
+
+```bash
+# MkDocs Material (recommended — auto-generates mkdocs.yml on first run):
+lwt deploy --target mkdocs --wiki-dir wiki
+
+# Build static site instead of serving:
+lwt deploy --target mkdocs --wiki-dir wiki --build
+
+# Custom port:
+lwt deploy --target mkdocs --wiki-dir wiki --port 9000
+
+# Fallback — plain HTTP server (no mkdocs needed):
+lwt deploy --target local --wiki-dir wiki
+
+# Docker (serves wiki/ via container):
+lwt deploy --target docker --wiki-dir wiki --mode volume
+
+# Confluence (dry-run by default):
+lwt deploy --target confluence --wiki-dir wiki --no-dry-run
+```
+
+Confluence requires `.lwt.env` with `CONFLUENCE_URL`, `CONFLUENCE_TOKEN`, `CONFLUENCE_SPACE`.
 
 ## Check it's alive
 
 ```bash
-# CLI reachable:
+# Tests (from llm-wiki-tools):
+cd /path/to/llm-wiki-tools
+pytest --tb=short -q
+
+# Current test count: 102 passed
+
+# CLI smoke test:
 lwt --version
-
-# Local deploy:
-curl -sf http://localhost:8080/ >/dev/null && echo OK
-
-# Docker deploy:
-curl -sf http://localhost:8443/ >/dev/null && echo OK
-
-# Confluence reachable (when configured):
-curl -sf -H "Authorization: Bearer $CONFLUENCE_TOKEN" \
-  "$CONFLUENCE_URL/rest/api/content?spaceKey=$CONFLUENCE_SPACE&limit=1" | head -c 120
+lwt lint --structural --wiki-dir wiki
 ```
 
 ## Common tasks
 
-### Update the config
+### Update the design
 
-Edit `pyproject.toml` for tool-side config (deps, entry point). Data
-repos (created via `lwt init <path>`) carry their own `AGENTS.md`,
-`CLAUDE.md`, and `.lwt.env.example` — edit those in the data repo,
-not here. Reload is implicit: `lwt` reads everything fresh per
-invocation.
-
-### Restart after a NAS reboot
-
-`lwt` itself has no persistent state to restart. For docker deploys:
-
-```bash
-docker start <container-id>
-# or redeploy fresh:
-cd <your-wiki-data-repo>
-lwt deploy --target docker --mode volume
-```
+Design artifacts live in `docs/` (moved from `~/devel/llm-wiki`):
+- `docs/karpathy-llm-wiki.md` — Karpathy's original pattern (read-only reference)
+- `docs/superpowers/specs/2026-04-15-llm-wiki-design.md` — system design
+- `docs/superpowers/plans/` — four implementation plans (all complete as of 2026-04-25)
 
 ### Backup / restore
 
-Nothing `lwt` writes needs explicit backup — it is a pure function of
-the data repo.
+Both repos are under git. Regular `git push` is the backup. For the data repo:
 
-- **Data repo** (`wiki/`, `raw/`, `templates/`, `AGENTS.md`): commit to
-  git; that IS the backup.
-- **Search cache** (`.search-index.json`): regenerable via
-  `lwt search <anything> --reindex`. Safe to delete.
-- **Temp ingests** (`wiki/.tmp/`): regenerable via `lwt ingest`. Safe
-  to delete; gitignored.
-- **Lint report** (`wiki/lint-report.md`): regenerable via
-  `lwt lint --structural`.
+```bash
+git add wiki/ raw/ && git commit -m "chore: wiki update $(date +%F)"
+```
 
 ## Things that have broken before
 
-Append entries as they happen:
+### 2026-04-19 — LocalBackend deploy() ignored wiki_dir parameter
 
-### 2026-04-19 — Docker image mode silently failed without Dockerfile
+Using `self.wiki_dir` instead of the passed `wiki_dir` argument in `deploy()`. Fixed in Plan 2. Root cause: copy-paste from init constructor without threading the parameter through.
 
-**Symptom:** `lwt deploy --target docker --mode image` returned non-zero
-with no clear error.
+### 2026-04-24 — MkdocsBackend _ensure_mkdocs_yml() was dead code
 
-**Fix:** `DockerBackend._image_command` now raises `FileNotFoundError`
-with a remediation hint when `wiki_dir/Dockerfile` is absent
-(commit `50eac8a`).
+`deploy()` inlined the yml-generation logic rather than calling `_ensure_mkdocs_yml()`. Fixed by refactoring the helper to accept an optional `repo_dir` parameter and return the yml path.
 
-**Root cause:** `docker build` was invoked without checking for the
-Dockerfile, producing a terse build error.
+### 2026-04-26 — template: frontmatter key conflicts with MkDocs
+
+MkDocs reserves the `template:` frontmatter key as a pointer to a Jinja2 HTML template. Wiki pages using `template: entity.md` caused MkDocs to try to load `entity.md` as an HTML template → `TemplateNotFound`. Fixed by renaming to `lwt_template:` in all 5 template files and all existing wiki pages.
+
+### 2026-04-26 — mkdocs serve not live-reloading on NFS
+
+inotify events don't fire on NFS-mounted filesystems. Fixed by passing `WATCHDOG_USE_POLLING=1` as an env var to the mkdocs subprocess in `MkdocsBackend.deploy()`.

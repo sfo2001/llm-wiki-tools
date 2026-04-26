@@ -1,11 +1,28 @@
 ---
 project: llm-wiki-tools
-last_updated: 2026-04-19
+last_updated: 2026-04-26
 ---
 
 # llm-wiki-tools — Architecture
 
 ## Components
+
+Three-layer pattern. The LLM owns `wiki/`; humans own `raw/` and the schema; `lwt` is dumb plumbing between them.
+
+```mermaid
+flowchart LR
+    Human([Human]) -->|curates sources| RAW[raw/ — immutable]
+    Human -->|asks questions| LLM
+    RAW -->|lwt ingest| TMP[wiki/.tmp/ — converted md]
+    TMP -->|read| LLM([LLM agent])
+    LLM -->|write / update| WIKI[wiki/ — pages, index, log]
+    WIKI -->|lwt search bm25| LLM
+    WIKI -->|lwt lint structural| LLM
+    SCHEMA[AGENTS.md / CLAUDE.md — workflows] -.->|instructs| LLM
+    WIKI -->|lwt deploy| DEPLOY[mkdocs · local http · docker · confluence]
+```
+
+### CLI implementation view
 
 ```mermaid
 flowchart LR
@@ -29,38 +46,75 @@ flowchart LR
     LN --> WIKI
     LN --> LR[wiki/lint-report.md]
 
-    DP --> LB[LocalBackend<br/>mkdocs/grip/http.server]
+    DP --> MB[MkdocsBackend<br/>mkdocs-material]
+    DP --> LB[LocalBackend<br/>http.server]
     DP --> DB[DockerBackend<br/>nginx volume or image]
     DP --> CB[ConfluenceBackend<br/>REST API, dry-run default]
 ```
 
-## External dependencies
+## Two-repo layout
 
-- `pandoc` (optional) — preferred DOCX / PPTX converter; handlers fall back to `python-docx` / `python-pptx`.
-- `pdftotext` (optional) — preferred PDF extractor; falls back to `pdfminer.six`, then `pypdf`.
-- `trafilatura` / `requests` — web URL ingest.
-- `mkdocs` / `grip` / `python3 -m http.server` — local deploy server selection, picked in that order by `shutil.which`.
-- `docker` — docker deploy target (volume mode mounts `wiki/` read-only into `nginx:alpine:80`; image mode requires a `Dockerfile` at the wiki root).
-- Confluence DC REST API — reached via `CONFLUENCE_URL` / `CONFLUENCE_TOKEN` / `CONFLUENCE_SPACE` env vars; push is gated behind `--no-dry-run`.
-- `rank-bm25` — search indexer.
-- `pyyaml`, `click` — frontmatter + CLI.
+| Repo | Role | Versioning |
+|---|---|---|
+| `llm-wiki-tools` | Python package providing the `lwt` CLI, bundled templates, skills, and canonical `AGENTS.md`. Shared across all wiki instances. Located at `/path/to/llm-wiki-tools`. | Git, semver |
+| `llm-wiki-<project>` | One per wiki instance. Contains `raw/`, `wiki/`, `templates/`, and a project-specific `CLAUDE.md`. Created via `lwt init`. | Git, per project |
+
+Design artifacts (pattern document, system-design spec, implementation plans) live in `docs/superpowers/` and `docs/karpathy-llm-wiki.md`.
+
+## Runtime dependencies
+
+`llm-wiki-tools` v0.1.0 is installed and working. Core pip dependencies:
+
+| System | What it provides | Delivery |
+|---|---|---|
+| Python 3.11+ | Runtime | System / pyenv |
+| click | CLI framework | pip |
+| pyyaml | Frontmatter parsing | pip |
+| rank-bm25 | BM25 search index | pip |
+| trafilatura + html2text | Web page → markdown | pip |
+| requests | Confluence REST API | pip |
+| pypdf + pdfminer.six | PDF → markdown fallback chain | pip |
+| python-docx | DOCX → markdown | pip |
+| python-pptx | PPTX → markdown | pip |
+| pandoc (optional) | RST/Org → markdown (subprocess) | system |
+| pdftotext / poppler (optional) | PDF → text (subprocess, primary) | system |
+
+Optional extras:
+
+| Extra | What it provides | Install |
+|---|---|---|
+| `mkdocs` | MkDocs Material site builder | `pip install "llm-wiki-tools[mkdocs]"` |
 
 ## Data flow
 
-- **Ingest:** source file or URL → format dispatcher picks handler → markdown written to `wiki/.tmp/<name>.md` with traceability frontmatter (source path, SHA, backend, ingest command). Agent reads the temp file and writes real wiki pages.
-- **Search:** `lwt search "<terms>"` loads or rebuilds `.search-index.json` (mtime-invalidated BM25), ranks pages, prints path + score + snippet.
-- **Lint:** `lwt lint --structural` walks `wiki/`, reports broken `[[wiki-links]]`, orphans, missing pages → `wiki/lint-report.md`; exits 1 on findings.
-- **Deploy:** `lwt deploy --target <local|docker|confluence>` dispatches to the backend. Confluence is dry-run by default; live push requires all three env vars and `--no-dry-run`.
-- **Failure modes:** missing pandoc/pdftotext falls back silently; Confluence dry-run prints the page list; Docker image mode raises `FileNotFoundError` if no Dockerfile present.
+### `lwt ingest`
+
+1. Human drops a source into `raw/` (PDF, DOCX, PPTX, markdown, or URL).
+2. Human runs `lwt ingest raw/<file>` (or `lwt ingest https://...`).
+3. `lwt` picks a format handler, converts to markdown, writes to `wiki/.tmp/<date>_<file>.md` with traceability frontmatter (source-SHA, backend, line count, lwt version).
+4. LLM reads the temp file (chunked if >200 lines), writes/updates wiki pages, updates `wiki/index.md`, appends `wiki/log.md`.
+5. `lwt` never writes to `wiki/` — exclusively the LLM's responsibility.
+
+### `lwt search`
+
+`lwt search <query> --wiki-dir wiki` runs BM25Plus over all `.md` files in `wiki/`, returns ranked `file:line` hits. LLM uses this to navigate large wikis without reading all pages.
+
+### `lwt lint`
+
+`lwt lint --structural` produces `file:line: message` findings: broken markdown links, pages referenced in index but missing, orphaned pages not in index. LLM follows up with semantic lint (contradictions, stale claims) in the agent session.
+
+### `lwt deploy`
+
+`lwt deploy --target mkdocs` (recommended): lazily generates `mkdocs.yml` beside `wiki/` using Material theme on first run, then serves or builds the site via subprocess. `--build` for static output, default `serve` for live dev.
 
 ## Where it runs
 
-- Host(s): any workstation with Python 3.11+ (developed on Linux).
-- Container(s): `nginx:alpine` for docker deploy target; no container for the CLI itself.
-- Config files: `pyproject.toml` (entry point `lwt = llm_wiki.cli:main`); data repo uses `.lwt.env` for Confluence credentials (loaded from env, not auto-sourced).
-- Secrets location: `CONFLUENCE_TOKEN` environment variable — kept out of repo; `.lwt.env.example` is the template.
-- Default ports: local `8080`, docker `8443`.
+- **Development:** local laptop — `lwt ingest / search / lint / init` work today.
+- **Serving:** `lwt deploy --target mkdocs --build` for static site; `lwt deploy --target docker` for HTTPS container on tardis.
+- **Config files:** `.lwt.env` (credentials, gitignored) plus `AGENTS.md` / `CLAUDE.md` in the data repo.
+- **Secrets:** `.lwt.env` — Confluence PAT, any future API tokens.
+- **Default ports:** mkdocs `8000`, local `8080`, docker `8443`.
 
-## Related docs in this wiki
+## Related docs
 
-- None — this project is a standalone CLI; no Unraid, Home Assistant, or exposed-network entries apply.
+- Once a wiki instance is deployed to tardis, add an entry to `knowledge-base/docs/unraid/compose-stacks.md` and `network/exposed-services.md`.

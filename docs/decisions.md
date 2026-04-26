@@ -1,34 +1,74 @@
 ---
 project: llm-wiki-tools
-last_updated: 2026-04-19
+last_updated: 2026-04-26
 ---
 
 # llm-wiki-tools — Decisions
 
 Append-only log of non-obvious choices. Newest at the top.
 
-## 2026-04-19 — initial setup
+## 2026-04-26 — docs migrated from ~/devel/llm-wiki
 
-**Decision:** Created this project as a CLI (`lwt`) that the LLM drives,
-with a separate "data repo" (scaffolded via `lwt init`) holding
-`raw/`, `wiki/`, `templates/`, and `AGENTS.md`/`CLAUDE.md`. The tools
-live here; the content lives elsewhere.
+**Decision:** Moved design artifacts (pattern doc, system-design spec, implementation plans, decisions log) from `~/devel/llm-wiki` into `llm-wiki-tools/docs/`. The `~/devel/llm-wiki` repo served as the planning space while the tools were being built.
 
-**Why:** Keeps the code repo small and stable while each knowledge base
-evolves on its own git history. Lets one `lwt` install serve any number
-of wikis.
+**Why:** The planning repo is now effectively done — all four plans are complete. Having the docs split across two repos creates confusion about which version is current. `llm-wiki-tools` is the canonical home of the project; its `docs/` is the natural home for all project documentation.
 
-**Alternatives considered:**
-- Single repo with code + one wiki — rejected; doesn't scale past one
-  topic.
-- Monolithic agent with in-memory state — rejected; no review surface,
-  no git audit trail.
-- Confluence-first with a thin CLI wrapper — rejected; wanted markdown
-  primary, Confluence as a deploy target (the current
-  `ConfluenceBackend` is a stub with dry-run default).
+**How this could age badly:** Design artifacts describing the `~/devel/llm-wiki` repo (e.g. references to that path) will be stale. The repo still exists as an archive.
 
-**How this could age badly:** If `lwt` grows enough data-repo-specific
-logic that every wiki needs a matching CLI version, the version-pinning
-will get painful. The `__version__` + git-hash footer in every page is
-the escape hatch — reproducing an old render requires checking out that
-tool version.
+## 2026-04-25 — Plan 4: human-facing scaffold additions
+
+**Decision:** `lwt init` now bundles `README.md`, `run.sh`, `run.ps1`, and `skills/` in the scaffolded data repo. Skills are copied from the bundled `data/skills/` directory; `README.md` is generated from a template with `__NAME__` substitution.
+
+**Why:** The scaffold was LLM-facing only (AGENTS.md, templates). A human picking up a fresh wiki repo had no entry point — no instructions, no wrapper scripts. The `run.sh/run.ps1` wrappers anchor all `lwt` paths to the repo directory so `./run.sh serve` works from any CWD.
+
+**How this could age badly:** If `run.sh` commands diverge from the actual `lwt` CLI, the wrappers become misleading. Mitigation: `run.sh` is thin — it just adds `--wiki-dir "$SCRIPT_DIR/wiki"` and delegates everything else to `lwt`.
+
+## 2026-04-20 — MkdocsBackend replaces LocalBackend as recommended deploy target
+
+**Decision:** `lwt deploy --target mkdocs` (MkDocs Material) is the recommended deploy target for personal use, replacing `--target local`. Plans 1, 2, and 3 are complete; `llm-wiki-tools` v0.1.0 ships 5 commands and 4 deploy targets.
+
+**Why:** MkDocs Material gives full-text search, Material theme, code highlighting, and anchor navigation — everything a personal research wiki needs — with zero configuration beyond `pip install llm-wiki-tools[mkdocs]`. The `LocalBackend` (raw HTTP server) had no search and rendered raw markdown. The `MkdocsBackend` auto-generates `mkdocs.yml` on first run and never overwrites a user-customised one.
+
+**Alternatives considered:** Keep `LocalBackend` as default, add mkdocs as extra. Rejected — the local server is too bare-bones to be the recommended path; calling it "local" already implies "fallback".
+
+**How this could age badly:** If the user customises `mkdocs.yml` heavily, `lwt deploy` will use it as-is (correct). If `mkdocs-material` changes its config schema, the bundled template may need updating.
+
+## 2026-04-19 — documented in the knowledge base
+
+**Decision:** Added overview / architecture / runbook / decisions to `docs/` and opted the project into the central knowledge base.
+
+**Why:** The idea is captured in a single `llm-wiki.md` plus two plans under `docs/superpowers/`. Without a KB entry, the pattern and design intent are invisible from the wiki index and easy to lose.
+
+**Alternatives considered:** Wait until `lwt` has code to document. Rejected — the design phase is itself worth indexing; the KB handles "Experiment" status explicitly.
+
+**How this could age badly:** Design evolves faster than the docs. Mitigation: architecture.md references the spec files rather than inlining them, so the canonical content stays in `docs/superpowers/specs/`.
+
+## 2026-04-15 — two-repo split: tools vs. data
+
+**Decision:** Separate `llm-wiki-tools` (Python package, versioned, shared) from `llm-wiki-<project>` (per-wiki data repo). The CLI (`lwt`) lives in tools; `raw/` and `wiki/` live in data repos. Captured in `docs/superpowers/specs/2026-04-15-llm-wiki-design.md`.
+
+**Why:** One toolchain, many wiki instances. Upgrading the CLI should not force-sync every data repo; changing a wiki's content should not require touching the tooling.
+
+**Alternatives considered:** Monorepo with `tools/` + `wikis/` subdirs. Rejected — makes version pinning per wiki awkward and conflates tool evolution with content evolution.
+
+**How this could age badly:** Bundled `AGENTS.md` / templates in `llm-wiki-tools` drift from what individual wikis actually use. Mitigation: `lwt init` copies schema once; wikis customise from there; tool upgrades never rewrite an existing wiki's `AGENTS.md`.
+
+## 2026-04-15 — LLM owns `wiki/`, CLI does not
+
+**Decision:** `lwt ingest` writes only to `wiki/.tmp/`, never to `wiki/` itself. All wiki-page creation and editing is done by the LLM agent. Captured in `docs/superpowers/specs/2026-04-15-llm-wiki-design.md`.
+
+**Why:** The value of the wiki is the synthesis, cross-referencing, and editorial judgement — exactly the work the LLM is meant to do. If the CLI writes pages, it competes with the agent and produces low-quality content. The CLI's job is the dumb plumbing (format conversion, indexing, linting) that the LLM would do slowly and inefficiently.
+
+**Alternatives considered:** Let `lwt ingest` auto-generate a stub page. Rejected — stubs become dead pages that nobody updates.
+
+**How this could age badly:** If the LLM ever becomes unreliable at page maintenance, we'll need human or CLI-assisted fallbacks. Revisit if the "wiki stays fresh" assumption breaks.
+
+## 2026-04-15 — initial setup
+
+**Decision:** Started `~/devel/llm-wiki` as a thinking space for the pattern described in Karpathy's `llm-wiki.md`.
+
+**Why:** Need a durable place to iterate on design before writing code.
+
+**Alternatives considered:** Start in `llm-wiki-tools` directly. Rejected — no design to implement yet.
+
+**How this could age badly:** This directory becomes a graveyard if the pattern never ships. Mitigation: the plans under `docs/superpowers/plans/` are task-ordered and actionable; either execute them or archive the project.
