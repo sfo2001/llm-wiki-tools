@@ -76,14 +76,16 @@ def search_cmd(query: str, wiki_dir: str, n: int, reindex: bool) -> None:
 @click.option("--newlines", "newlines_flag", is_flag=True, default=False,
               help="Every wiki/**/*.md ends with exactly one trailing newline.")
 @click.option("--append-only", "append_only_flag", is_flag=True, default=False,
-              help="No prior log.md `## [date]` header has been removed or modified vs HEAD.")
+              help="No prior log.md `## [date]` header has been removed or modified vs --ref.")
+@click.option("--ref", default="HEAD", show_default=True,
+              help="Git ref used as the baseline for --append-only (e.g. HEAD, origin/main, HEAD~1).")
 @click.option("--all", "all_flag", is_flag=True, default=False,
               help="Run all available checks.")
 @click.option("--wiki-dir", default="wiki", show_default=True)
 @click.option("--output", default=None)
 def lint(
     structural: bool, newlines_flag: bool, append_only_flag: bool,
-    all_flag: bool, wiki_dir: str, output: str | None,
+    ref: str, all_flag: bool, wiki_dir: str, output: str | None,
 ) -> None:
     """Run lint checks over the wiki. At least one check flag is required."""
     if all_flag:
@@ -99,7 +101,7 @@ def lint(
     if newlines_flag:
         findings += check_newlines(wiki_path)
     if append_only_flag:
-        findings += check_log_append_only(wiki_path)
+        findings += check_log_append_only(wiki_path, ref=ref)
     report = format_report(findings)
     report_path = Path(output) if output else wiki_path / "lint-report.md"
     report_path.write_text(report, encoding="utf-8")

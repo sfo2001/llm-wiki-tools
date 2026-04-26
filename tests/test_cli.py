@@ -159,6 +159,33 @@ def test_lwt_log_entry_body_file_stdin(tmp_path):
     assert "- piped body line" in (wiki_dir / "log.md").read_text()
 
 
+def test_lwt_lint_append_only_ref_flag(tmp_path):
+    import subprocess
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "t@t"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "t"], cwd=repo, check=True)
+    wiki = repo / "wiki"
+    wiki.mkdir()
+    log = wiki / "log.md"
+    log.write_text("# Log\n\n## [2026-04-01] ingest | First\n")
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "first"], cwd=repo, check=True)
+    log.write_text("# Log\n\n## [2026-04-01] ingest | First\n\n## [2026-04-02] ingest | Second\n")
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "second"], cwd=repo, check=True)
+    # Overwrite First — comparing against HEAD~1 (where First was the only entry)
+    # should flag, comparing against HEAD (where both existed) should also flag.
+    log.write_text("# Log\n\n## [2026-04-03] ingest | Third\n")
+    result = CliRunner().invoke(main, [
+        "lint", "--append-only", "--ref", "HEAD~1",
+        "--wiki-dir", str(wiki),
+    ])
+    assert result.exit_code != 0
+    assert "HEAD~1" in (wiki / "lint-report.md").read_text()
+
+
 def test_lwt_log_entry_rejects_body_and_body_file(tmp_path):
     wiki_dir = tmp_path / "wiki"
     wiki_dir.mkdir()
