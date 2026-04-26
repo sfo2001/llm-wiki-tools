@@ -400,3 +400,48 @@ def test_lwt_init_creates_run_ps1(tmp_path):
     result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
     assert result.exit_code == 0, result.output
     assert (tmp_path / "wiki" / "run.ps1").exists()
+
+
+# --- init scaffold: tools/ + --wheel ---
+
+def test_lwt_init_creates_tools_dir(tmp_path):
+    result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "wiki" / "tools").is_dir()
+
+
+def test_lwt_init_without_wheel_warns(tmp_path):
+    result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
+    assert result.exit_code == 0
+    assert "tools/" in result.output
+    assert "wheel" in result.output.lower()
+
+
+def test_lwt_init_with_wheel_copies_it(tmp_path):
+    wheel = tmp_path / "llm_wiki_tools-0.1.0-py3-none-any.whl"
+    wheel.write_bytes(b"PK\x03\x04")
+    target = tmp_path / "wiki"
+    result = CliRunner().invoke(main, [
+        "init", str(target), "--wheel", str(wheel),
+    ])
+    assert result.exit_code == 0, result.output
+    assert (target / "tools" / "llm_wiki_tools-0.1.0-py3-none-any.whl").exists()
+
+
+def test_lwt_init_with_wheel_does_not_warn(tmp_path):
+    wheel = tmp_path / "llm_wiki_tools-0.1.0-py3-none-any.whl"
+    wheel.write_bytes(b"PK")
+    result = CliRunner().invoke(main, [
+        "init", str(tmp_path / "wiki"), "--wheel", str(wheel),
+    ])
+    assert result.exit_code == 0
+    assert "Drop a llm_wiki_tools" not in result.output
+
+
+def test_lwt_init_with_invalid_wheel_rejects(tmp_path):
+    bogus = tmp_path / "not-a-wheel.txt"
+    bogus.write_bytes(b"nope")
+    result = CliRunner().invoke(main, [
+        "init", str(tmp_path / "wiki"), "--wheel", str(bogus),
+    ])
+    assert result.exit_code != 0

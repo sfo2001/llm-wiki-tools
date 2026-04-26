@@ -201,18 +201,25 @@ def deploy(
 @click.argument("path", default=".")
 @click.option("--name", default="my-wiki", show_default=True,
               help="Human-readable name for this wiki.")
-def init_cmd(path: str, name: str) -> None:
+@click.option("--wheel", default=None, type=click.Path(exists=True),
+              help="Seed tools/ with a wheel so the wiki self-bootstraps immediately.")
+def init_cmd(path: str, name: str, wheel: str | None) -> None:
     """Scaffold a new llm-wiki data repository."""
     from llm_wiki.init import scaffold_data_repo
     target = Path(path)
-    scaffold_data_repo(target, name=name)
+    scaffold_data_repo(target, name=name, wheel=Path(wheel) if wheel else None)
     click.echo(f"Initialized wiki at {target.resolve()}")
     click.echo(f"  raw/              — drop source files here")
     click.echo(f"  wiki/             — LLM-maintained markdown pages")
     click.echo(f"  templates/        — page templates")
+    click.echo(f"  tools/            — lwt wheels (used by run.sh on bootstrap)")
     click.echo(f"  AGENTS.md         — agent schema (edit to customize)")
     click.echo(f"  CLAUDE.md         — Claude Code configuration")
     click.echo(f"  .lwt.env.example  — copy to .lwt.env and fill in credentials")
+    if wheel is None:
+        click.echo("")
+        click.echo("⚠ No wheel installed. Drop a llm_wiki_tools-*.whl into tools/")
+        click.echo("  before ./run.sh works, or re-run lwt init with --wheel.")
 
 
 @main.command(name="update")

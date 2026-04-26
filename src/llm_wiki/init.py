@@ -4,8 +4,16 @@ from pathlib import Path
 _DATA_DIR = Path(__file__).parent / "data"
 
 
-def scaffold_data_repo(target_dir: Path, name: str = "my-wiki") -> None:
-    """Create the llm-wiki data repo directory structure at target_dir."""
+def scaffold_data_repo(
+    target_dir: Path,
+    name: str = "my-wiki",
+    wheel: Path | None = None,
+) -> None:
+    """Create the llm-wiki data repo directory structure at target_dir.
+
+    If wheel is given, also seed target_dir/tools/ with the lwt wheel so
+    run.sh / run.ps1 can bootstrap on first run.
+    """
     target_dir.mkdir(parents=True, exist_ok=True)
 
     # Directory structure
@@ -65,3 +73,9 @@ def scaffold_data_repo(target_dir: Path, name: str = "my-wiki") -> None:
     (target_dir / "run.sh").write_bytes((_DATA_DIR / "run.sh").read_bytes())
     os.chmod(target_dir / "run.sh", 0o755)
     (target_dir / "run.ps1").write_bytes((_DATA_DIR / "run.ps1").read_bytes())
+
+    # Tools dir for the bootstrap wheel
+    (target_dir / "tools").mkdir(exist_ok=True)
+    if wheel is not None:
+        from llm_wiki.update import install_wheel
+        install_wheel(target_dir, wheel)
