@@ -28,6 +28,7 @@ dev = [
 ]
 mkdocs = [
     "mkdocs-material>=9.5",
+    "mkdocs-roamlinks-plugin>=0.3",
 ]
 
 [project.scripts]
