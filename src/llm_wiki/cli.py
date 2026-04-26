@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -9,6 +10,11 @@ from llm_wiki.lint import check_log_append_only, check_newlines, lint_structural
 from llm_wiki.lint.report import format_report
 from llm_wiki.log import append_log
 from llm_wiki.search import search
+
+# Default ports per deploy target. Overridable via `lwt deploy --port`.
+DEFAULT_PORT_LOCAL = 8080
+DEFAULT_PORT_DOCKER = 8443
+DEFAULT_PORT_MKDOCS = 8000
 
 
 @click.group()
@@ -141,7 +147,8 @@ def log_entry_cmd(
 )
 @click.option("--wiki-dir", default="wiki", show_default=True)
 @click.option("--port", default=None, type=int,
-              help="Port override (default: 8080 local, 8443 docker, 8000 mkdocs).")
+              help=f"Port override (default: {DEFAULT_PORT_LOCAL} local, "
+                   f"{DEFAULT_PORT_DOCKER} docker, {DEFAULT_PORT_MKDOCS} mkdocs).")
 @click.option(
     "--mode", default="volume",
     type=click.Choice(["volume", "image"]), show_default=True,
@@ -164,21 +171,20 @@ def deploy(
     build: bool, public: bool,
 ) -> None:
     """Deploy wiki/ to a target (local HTTP, Docker, Confluence, or MkDocs Material)."""
-    import os
     wiki_path = Path(wiki_dir)
     bind = "0.0.0.0" if public else "127.0.0.1"
     if target == "local":
         from llm_wiki.deploy.local import LocalBackend
-        backend = LocalBackend(wiki_path, port=port or 8080, bind=bind)
+        backend = LocalBackend(wiki_path, port=port or DEFAULT_PORT_LOCAL, bind=bind)
     elif target == "docker":
         from llm_wiki.deploy.docker import DockerBackend
-        backend = DockerBackend(wiki_path, port=port or 8443, mode=mode)
+        backend = DockerBackend(wiki_path, port=port or DEFAULT_PORT_DOCKER, mode=mode)
     elif target == "mkdocs":
         from llm_wiki.deploy.mkdocs_backend import MkdocsBackend
         resolved_name = wiki_path.resolve().parent.name.replace("-", " ").title()
         name = resolved_name or "Wiki"
         backend = MkdocsBackend(
-            wiki_path, port=port or 8000, name=name, build=build, bind=bind,
+            wiki_path, port=port or DEFAULT_PORT_MKDOCS, name=name, build=build, bind=bind,
         )
     else:  # confluence
         from llm_wiki.deploy.confluence import ConfluenceBackend

@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -97,6 +98,5 @@ class MkdocsBackend(FilesystemBackend):
                 "--dev-addr", f"{self.bind}:{self.port}",
             ]
         print(f"{'Building' if self.build else 'Serving'}: {' '.join(cmd)}")
-        import os
         env = {**os.environ, "WATCHDOG_USE_POLLING": "1"}
         subprocess.run(cmd, check=True, cwd=str(repo_dir), env=env)

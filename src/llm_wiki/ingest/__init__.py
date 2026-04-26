@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -45,7 +46,6 @@ def ingest_source(
     if is_url:
         validate_ingest_url(source_str, allow_internal=allow_internal)
         if "/rest/api/content/" in source_str:
-            import os
             token = os.environ.get("CONFLUENCE_TOKEN", "")
             backend_name, md_body = confluence.convert_confluence(source_str, token)
         else:
