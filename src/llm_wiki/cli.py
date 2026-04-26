@@ -5,8 +5,9 @@ import click
 
 from llm_wiki import __version__
 from llm_wiki.ingest import IngestResult, ingest_source
-from llm_wiki.lint import lint_structural
+from llm_wiki.lint import check_log_append_only, check_newlines, lint_structural
 from llm_wiki.lint.report import format_report
+from llm_wiki.log import append_log
 from llm_wiki.search import search
 
 
@@ -70,13 +71,35 @@ def search_cmd(query: str, wiki_dir: str, n: int, reindex: bool) -> None:
 
 
 @main.command()
-@click.option("--structural", is_flag=True, required=True)
+@click.option("--structural", is_flag=True, default=False,
+              help="Broken links, orphans, missing pages.")
+@click.option("--newlines", "newlines_flag", is_flag=True, default=False,
+              help="Every wiki/**/*.md ends with exactly one trailing newline.")
+@click.option("--append-only", "append_only_flag", is_flag=True, default=False,
+              help="No prior log.md `## [date]` header has been removed or modified vs HEAD.")
+@click.option("--all", "all_flag", is_flag=True, default=False,
+              help="Run all available checks.")
 @click.option("--wiki-dir", default="wiki", show_default=True)
 @click.option("--output", default=None)
-def lint(structural: bool, wiki_dir: str, output: str | None) -> None:
-    """Run structural lint checks over the wiki."""
+def lint(
+    structural: bool, newlines_flag: bool, append_only_flag: bool,
+    all_flag: bool, wiki_dir: str, output: str | None,
+) -> None:
+    """Run lint checks over the wiki. At least one check flag is required."""
+    if all_flag:
+        structural = newlines_flag = append_only_flag = True
+    if not (structural or newlines_flag or append_only_flag):
+        raise click.UsageError(
+            "Specify at least one check: --structural, --newlines, --append-only, or --all."
+        )
     wiki_path = Path(wiki_dir)
-    findings = lint_structural(wiki_path)
+    findings = []
+    if structural:
+        findings += lint_structural(wiki_path)
+    if newlines_flag:
+        findings += check_newlines(wiki_path)
+    if append_only_flag:
+        findings += check_log_append_only(wiki_path)
     report = format_report(findings)
     report_path = Path(output) if output else wiki_path / "lint-report.md"
     report_path.write_text(report, encoding="utf-8")
@@ -84,6 +107,28 @@ def lint(structural: bool, wiki_dir: str, output: str | None) -> None:
     if findings:
         click.echo(f"\nReport written to {report_path}")
         sys.exit(1)
+
+
+@main.command(name="log-entry")
+@click.option("--op", required=True, help="Operation type (e.g. ingest, lint, query).")
+@click.option("--title", required=True, help="Entry title.")
+@click.option("--body", default=None,
+              help="Entry body (markdown). Use --body-file or '-' for stdin instead.")
+@click.option("--body-file", default=None, type=click.Path(),
+              help="Path to file containing entry body. Use '-' for stdin.")
+@click.option("--wiki-dir", default="wiki", show_default=True)
+def log_entry_cmd(
+    op: str, title: str, body: str | None, body_file: str | None, wiki_dir: str,
+) -> None:
+    """Append an entry to wiki/log.md atomically. Never modifies prior entries."""
+    if body and body_file:
+        raise click.UsageError("Use either --body or --body-file, not both.")
+    if body_file == "-":
+        body = sys.stdin.read()
+    elif body_file:
+        body = Path(body_file).read_text(encoding="utf-8")
+    append_log(Path(wiki_dir), operation=op, title=title, body=body)
+    click.echo(f"Appended to {wiki_dir}/log.md: {op} | {title}")
 
 
 @main.command()

@@ -74,6 +74,104 @@ def test_lwt_lint_writes_report_and_exits_nonzero(tmp_path):
     assert "missing" in (wiki_dir / "lint-report.md").read_text()
 
 
+def test_lwt_lint_requires_a_check_flag(tmp_path):
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    result = CliRunner().invoke(main, ["lint", "--wiki-dir", str(wiki_dir)])
+    assert result.exit_code != 0
+    assert "at least one check" in result.output.lower()
+
+
+def test_lwt_lint_newlines_flag(tmp_path):
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    (wiki_dir / "a.md").write_bytes(b"# A")  # no trailing newline
+    result = CliRunner().invoke(main, ["lint", "--newlines",
+                                       "--wiki-dir", str(wiki_dir)])
+    assert result.exit_code != 0
+    assert "missing_newline" in (wiki_dir / "lint-report.md").read_text()
+
+
+def test_lwt_lint_all_flag_runs_every_check(tmp_path):
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    (wiki_dir / "index.md").write_text("# Index\n\n- [[missing]] — Gone\n")
+    (wiki_dir / "a.md").write_bytes(b"# A")
+    result = CliRunner().invoke(main, ["lint", "--all",
+                                       "--wiki-dir", str(wiki_dir)])
+    assert result.exit_code != 0
+    report = (wiki_dir / "lint-report.md").read_text()
+    assert "missing_page" in report
+    assert "missing_newline" in report
+
+
+def test_lwt_log_entry_help():
+    result = CliRunner().invoke(main, ["log-entry", "--help"])
+    assert result.exit_code == 0
+    assert "--op" in result.output
+    assert "--title" in result.output
+
+
+def test_lwt_log_entry_appends_to_log(tmp_path):
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    result = CliRunner().invoke(main, [
+        "log-entry", "--op", "ingest", "--title", "AI 2027",
+        "--body", "- Source: https://ai-2027.com\n- Backend: web",
+        "--wiki-dir", str(wiki_dir),
+    ])
+    assert result.exit_code == 0, result.output
+    log = (wiki_dir / "log.md").read_text()
+    assert "ingest | AI 2027" in log
+    assert "- Source: https://ai-2027.com" in log
+
+
+def test_lwt_log_entry_does_not_overwrite_prior(tmp_path):
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    (wiki_dir / "log.md").write_text(
+        "# Log\n\n## [2026-04-25] ingest | First\n\n- detail\n"
+    )
+    before = (wiki_dir / "log.md").read_text()
+    result = CliRunner().invoke(main, [
+        "log-entry", "--op", "ingest", "--title", "Second",
+        "--wiki-dir", str(wiki_dir),
+    ])
+    assert result.exit_code == 0, result.output
+    after = (wiki_dir / "log.md").read_text()
+    assert after.startswith(before.rstrip("\n"))
+    assert "ingest | Second" in after
+
+
+def test_lwt_log_entry_body_file_stdin(tmp_path):
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    result = CliRunner().invoke(
+        main,
+        [
+            "log-entry", "--op", "ingest", "--title", "From Stdin",
+            "--body-file", "-",
+            "--wiki-dir", str(wiki_dir),
+        ],
+        input="- piped body line\n",
+    )
+    assert result.exit_code == 0, result.output
+    assert "- piped body line" in (wiki_dir / "log.md").read_text()
+
+
+def test_lwt_log_entry_rejects_body_and_body_file(tmp_path):
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    body_file = tmp_path / "b.txt"
+    body_file.write_text("x")
+    result = CliRunner().invoke(main, [
+        "log-entry", "--op", "ingest", "--title", "T",
+        "--body", "y", "--body-file", str(body_file),
+        "--wiki-dir", str(wiki_dir),
+    ])
+    assert result.exit_code != 0
+
+
 # --- deploy tests ---
 from unittest.mock import patch as mock_patch
 

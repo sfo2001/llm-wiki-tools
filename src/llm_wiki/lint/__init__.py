@@ -1,4 +1,6 @@
 from pathlib import Path
+from llm_wiki.lint.append_only import check_log_append_only
+from llm_wiki.lint.newlines import check_newlines
 from llm_wiki.lint.structural import (
     Finding,
     check_broken_links,
@@ -15,4 +17,9 @@ def lint_structural(wiki_dir: Path) -> list[Finding]:
     )
 
 
-__all__ = ["lint_structural", "Finding"]
+__all__ = [
+    "lint_structural",
+    "check_log_append_only",
+    "check_newlines",
+    "Finding",
+]

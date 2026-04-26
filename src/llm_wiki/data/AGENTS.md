@@ -24,7 +24,11 @@ cross-referencing, filing, and bookkeeping.
 | lwt ingest <file-or-url>         | Convert source → wiki/.tmp/<name>.md           |
 | lwt ingest <file> --output -     | Convert small source → stdout (opt-in only)    |
 | lwt search "<terms>"             | BM25 keyword search over wiki/ → ranked paths  |
-| lwt lint --structural            | Structural check → wiki/lint-report.md         |
+| lwt lint --structural            | Broken-link / orphan / missing-page check      |
+| lwt lint --newlines              | Every wiki/**/*.md ends with one trailing `\n` |
+| lwt lint --append-only           | No prior log.md `## [date]` header was changed |
+| lwt lint --all                   | Run every check above                          |
+| lwt log-entry --op X --title Y   | Atomically append to wiki/log.md (never edit)  |
 | lwt deploy --target <t>          | Push wiki/ to output target                    |
 | lwt init <path>                  | Scaffold a new data repo                       |
 
@@ -55,17 +59,30 @@ leads to the same workflow:
 7. Select template: source-summary.md for ingested sources
 8. Write/update wiki pages — copy traceability frontmatter from temp file header
 9. Typical scope: 1 source-summary + 3–10 entity/concept page updates
-10. Update wiki/index.md, append to wiki/log.md:
-    `## [YYYY-MM-DD] ingest | <source title>`
+10. Update wiki/index.md (purely additive — never remove prior entries)
+11. **Append to wiki/log.md using `lwt log-entry`** — do not hand-edit the file:
+    ```
+    lwt log-entry --op ingest --title "<source title>" --body-file - <<'EOF'
+    - Source: <path-or-url>
+    - Backend: <ingest-backend>
+    - Wiki pages created (N): ...
+    EOF
+    ```
+    Hand-editing risks overwriting prior `## [date]` headers. `lwt log-entry`
+    always appends at the end of file and never touches existing content.
+12. Verify: `lwt lint --append-only --newlines --wiki-dir wiki` → exit 0
 
 ### Lint
 
-1. Run: `lwt lint --structural`
+1. Run: `lwt lint --all` (or any subset of `--structural`, `--newlines`, `--append-only`)
 2. Read wiki/lint-report.md — work through findings top to bottom
 3. Fix structural issues first (broken links, orphans, missing pages)
-4. Semantic lint: for flagged pages, read page + check source frontmatter lineage
-5. Flag contradictions, stale claims, unresolvable gaps to user
-6. Append to wiki/log.md: `## [YYYY-MM-DD] lint | <finding count> findings`
+4. Fix `missing_newline` / `extra_newline` findings — every file ends with one `\n`
+5. Resolve `log_header_modified` findings by restoring the prior `## [date]` header
+   and using `lwt log-entry` to add the new entry instead of hand-editing
+6. Semantic lint: for flagged pages, read page + check source frontmatter lineage
+7. Flag contradictions, stale claims, unresolvable gaps to user
+8. Record the lint via `lwt log-entry --op lint --title "<N> findings"`
 
 ### Deploy
 
@@ -84,8 +101,11 @@ leads to the same workflow:
 - Frontmatter key for template traceability: `lwt_template: <template-name>.md` (**not** `template:` — that key is reserved by MkDocs and will break the site)
 - Every page footer: lwt version, git hash, date, template name
 - Cross-links: [[page-name]] syntax
-- wiki/index.md: updated on every write, one line per page with summary
-- wiki/log.md: append-only, entries prefixed `## [YYYY-MM-DD] <op> | <title>`
+- Every file ends with exactly one trailing newline (enforced by `lwt lint --newlines`)
+- wiki/index.md: updated on every write, one line per page with summary; additive only
+- wiki/log.md: append-only, entries prefixed `## [YYYY-MM-DD] <op> | <title>`.
+  Always grow it with `lwt log-entry`, never with manual Edit/Write — the CLI
+  guarantees prior entries stay intact (verified by `lwt lint --append-only`)
 
 ## Schema evolution
 
