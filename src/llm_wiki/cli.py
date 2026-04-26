@@ -213,3 +213,35 @@ def init_cmd(path: str, name: str) -> None:
     click.echo(f"  AGENTS.md         — agent schema (edit to customize)")
     click.echo(f"  CLAUDE.md         — Claude Code configuration")
     click.echo(f"  .lwt.env.example  — copy to .lwt.env and fill in credentials")
+
+
+@main.command(name="update")
+@click.argument("path", default=".")
+@click.option("--apply", "apply_changes", is_flag=True, default=False,
+              help="Write changes (default: dry-run / status only).")
+@click.option("--force", is_flag=True, default=False,
+              help="Also overwrite customisable files (CLAUDE.md, templates/, …).")
+def update_cmd(path: str, apply_changes: bool, force: bool) -> None:
+    """Refresh bundled assets (AGENTS.md, skills/, run.sh) in an existing wiki repo."""
+    from llm_wiki.update import apply_update, compute_status, detect_name
+    target = Path(path)
+    name = detect_name(target)
+    statuses = compute_status(target, name=name)
+    differs = [s for s in statuses if s.state != "identical"]
+    if not differs:
+        click.echo("All bundled files match. Nothing to do.")
+        return
+    width = max(len(s.rel_path) for s in differs)
+    click.echo(f"{'File':<{width}}  {'Class':<13}  {'State':<10}  Action")
+    click.echo("-" * (width + 40))
+    for s in differs:
+        action = (
+            "will update" if (s.class_ == "canonical" or force)
+            else "skip (use --force)"
+        )
+        click.echo(f"{s.rel_path:<{width}}  {s.class_:<13}  {s.state:<10}  {action}")
+    if not apply_changes:
+        click.echo("\nDry run — pass --apply to write changes.")
+        return
+    written = apply_update(target, force=force, name=name)
+    click.echo(f"\nUpdated {len(written)} file(s).")
