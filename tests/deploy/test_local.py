@@ -36,7 +36,7 @@ def test_local_delete_page_noop_if_missing(tmp_path):
 
 def test_local_server_command_fallback_to_http_server(tmp_path):
     b = LocalBackend(tmp_path / "wiki", port=8080)
-    with patch("shutil.which", return_value=None):
+    with patch("llm_wiki.deploy.local.shutil.which", return_value=None):
         cmd = b._server_command()
     joined = " ".join(cmd)
     assert "http.server" in joined
@@ -48,7 +48,7 @@ def test_local_server_command_prefers_mkdocs(tmp_path):
     b = LocalBackend(tmp_path / "wiki", port=9000)
     def which_side_effect(name):
         return "/usr/bin/mkdocs" if name == "mkdocs" else None
-    with patch("shutil.which", side_effect=which_side_effect):
+    with patch("llm_wiki.deploy.local.shutil.which", side_effect=which_side_effect):
         cmd = b._server_command()
     assert cmd[0] == "mkdocs"
     assert "9000" in " ".join(cmd)
@@ -56,7 +56,9 @@ def test_local_server_command_prefers_mkdocs(tmp_path):
 
 def test_local_deploy_calls_subprocess(tmp_path):
     b = LocalBackend(tmp_path / "wiki", port=8080)
-    with patch("shutil.which", return_value=None):
-        with patch("subprocess.run") as mock_run:
+    with patch("llm_wiki.deploy.local.shutil.which", return_value=None):
+        with patch("llm_wiki.deploy.local.subprocess.run") as mock_run:
             b.deploy(tmp_path / "wiki")
     mock_run.assert_called_once()
+    cmd = mock_run.call_args[0][0]
+    assert "http.server" in cmd
