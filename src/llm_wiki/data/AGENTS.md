@@ -31,6 +31,7 @@ cross-referencing, filing, and bookkeeping.
 | lwt log-entry --op X --title Y   | Atomically append to wiki/log.md (never edit)  |
 | lwt deploy --target <t>          | Push wiki/ to output target                    |
 | lwt init <path>                  | Scaffold a new data repo                       |
+| lwt update [--apply] [--force]   | Refresh bundled assets (AGENTS.md, skills/, run.sh) from current lwt |
 
 ## Workflows
 

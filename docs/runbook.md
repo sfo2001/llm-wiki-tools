@@ -111,6 +111,26 @@ lwt lint --structural --wiki-dir wiki
 
 ## Common tasks
 
+### Refresh bundled assets in an existing wiki
+
+When `llm-wiki-tools` ships changes to `AGENTS.md`, `skills/`, or the `run.sh` / `run.ps1` wrappers, pull them into a deployed wiki repo with:
+
+```bash
+cd <wiki-data-repo>
+lwt update                    # dry-run — print per-file status table
+lwt update --apply            # write canonical updates (AGENTS.md, skills/, run.sh, run.ps1)
+lwt update --apply --force    # also overwrite CLAUDE.md, templates/, README.md, .gitignore
+git diff                      # review
+git commit -am "chore: refresh lwt bundled assets"
+```
+
+Two file classes:
+
+- **canonical** — LLM-owned, expected to stay in sync with the bundle. Updated silently on `--apply`: `AGENTS.md`, `skills/{ingest,query,lint,deploy}.md`, `run.sh`, `run.ps1`.
+- **customisable** — user-owned, may diverge. Diff is printed; not touched unless `--force`: `CLAUDE.md`, `README.md`, `templates/*`, `.gitignore`, `.lwt.env.example`.
+
+The wiki name (substituted into `README.md`) is recovered from `# <Name> Wiki` on line 1 of the deployed README. Always commit the wiki repo before `lwt update --apply` so the change is reviewable.
+
 ### Update the design
 
 Design artifacts live in `docs/` (moved from `~/devel/llm-wiki`):

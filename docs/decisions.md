@@ -7,6 +7,16 @@ last_updated: 2026-04-26
 
 Append-only log of non-obvious choices. Newest at the top.
 
+## 2026-04-26 — `lwt update` Phase 1: hardcoded canonical/customisable taxonomy
+
+**Decision:** `lwt update` uses a two-class file taxonomy hardcoded in `src/llm_wiki/update.py` — **canonical** files (AGENTS.md, skills/, run.sh, run.ps1) overwrite silently on `--apply`; **customisable** files (CLAUDE.md, README.md, templates/, .gitignore, .lwt.env.example) are left alone unless `--force`. No state file, no manifest.
+
+**Why:** Drift between the tools repo and deployed wikis was previously a manual `cp` exercise, which scales badly and is easy to forget. Hardcoded taxonomy ships in a day and covers the 80% case (refreshing the agent contract + skills) without the bookkeeping cost of a per-file manifest. Phase 2 (planned) adds `.lwt-manifest.yaml` so we can distinguish "user-modified" from "bundle-drift" reliably; Phase 3 adds 3-way merge. Doing the simple version first lets us learn whether the taxonomy boundary (e.g. should `skills/` be customisable too?) is correct before committing to a manifest format.
+
+**Alternatives considered:** Manifest from day one — rejected as premature; we don't yet know which files users actually customise. Single-class "always overwrite, with `--diff` only" — rejected; too easy to clobber a customised CLAUDE.md.
+
+**How this could age badly:** If users routinely customise `skills/*` (currently canonical), they'll lose changes silently on `--apply`. The mitigation is the Phase 2 manifest; the canary is user feedback. README.md substitution name is recovered from line 1 of the deployed README — fragile if the user rewrites the title format.
+
 ## 2026-04-26 — docs migrated from ~/devel/llm-wiki
 
 **Decision:** Moved design artifacts (pattern doc, system-design spec, implementation plans, decisions log) from `~/devel/llm-wiki` into `llm-wiki-tools/docs/`. The `~/devel/llm-wiki` repo served as the planning space while the tools were being built.
