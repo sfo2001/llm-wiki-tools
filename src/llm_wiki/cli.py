@@ -221,15 +221,26 @@ def init_cmd(path: str, name: str) -> None:
               help="Write changes (default: dry-run / status only).")
 @click.option("--force", is_flag=True, default=False,
               help="Also overwrite customisable files (CLAUDE.md, templates/, …).")
-def update_cmd(path: str, apply_changes: bool, force: bool) -> None:
+@click.option("--tools", "tools_wheel", default=None, type=click.Path(exists=True),
+              help="Path to a new llm_wiki_tools-*.whl; copies into <PATH>/tools/ and prunes older wheels.")
+def update_cmd(
+    path: str, apply_changes: bool, force: bool, tools_wheel: str | None,
+) -> None:
     """Refresh bundled assets (AGENTS.md, skills/, run.sh) in an existing wiki repo."""
-    from llm_wiki.update import apply_update, compute_status, detect_name
+    from llm_wiki.update import apply_update, compute_status, detect_name, install_wheel
     target = Path(path)
+
+    if tools_wheel:
+        dest = install_wheel(target, Path(tools_wheel))
+        click.echo(f"→ Installed wheel: tools/{dest.name}")
+        click.echo(f"  (run.sh / run.ps1 will reinstall on next invocation)")
+
     name = detect_name(target)
     statuses = compute_status(target, name=name)
     differs = [s for s in statuses if s.state != "identical"]
     if not differs:
-        click.echo("All bundled files match. Nothing to do.")
+        if not tools_wheel:
+            click.echo("All bundled files match. Nothing to do.")
         return
     width = max(len(s.rel_path) for s in differs)
     click.echo(f"{'File':<{width}}  {'Class':<13}  {'State':<10}  Action")
