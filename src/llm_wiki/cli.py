@@ -103,15 +103,21 @@ def lint(structural: bool, wiki_dir: str, output: str | None) -> None:
     "--build", is_flag=True, default=False,
     help="MkDocs: build static site instead of serving (default: serve).",
 )
+@click.option(
+    "--public", is_flag=True, default=False,
+    help="Bind dev server to 0.0.0.0 (LAN-reachable). Default binds to 127.0.0.1.",
+)
 def deploy(
-    target: str, wiki_dir: str, port: int | None, mode: str, dry_run: bool, build: bool
+    target: str, wiki_dir: str, port: int | None, mode: str, dry_run: bool,
+    build: bool, public: bool,
 ) -> None:
     """Deploy wiki/ to a target (local HTTP, Docker, Confluence, or MkDocs Material)."""
     import os
     wiki_path = Path(wiki_dir)
+    bind = "0.0.0.0" if public else "127.0.0.1"
     if target == "local":
         from llm_wiki.deploy.local import LocalBackend
-        backend = LocalBackend(wiki_path, port=port or 8080)
+        backend = LocalBackend(wiki_path, port=port or 8080, bind=bind)
     elif target == "docker":
         from llm_wiki.deploy.docker import DockerBackend
         backend = DockerBackend(wiki_path, port=port or 8443, mode=mode)
@@ -119,7 +125,9 @@ def deploy(
         from llm_wiki.deploy.mkdocs_backend import MkdocsBackend
         resolved_name = wiki_path.resolve().parent.name.replace("-", " ").title()
         name = resolved_name or "Wiki"
-        backend = MkdocsBackend(wiki_path, port=port or 8000, name=name, build=build)
+        backend = MkdocsBackend(
+            wiki_path, port=port or 8000, name=name, build=build, bind=bind,
+        )
     else:  # confluence
         from llm_wiki.deploy.confluence import ConfluenceBackend
         url = os.environ.get("CONFLUENCE_URL", "")

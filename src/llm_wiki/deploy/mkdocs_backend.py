@@ -41,11 +41,13 @@ class MkdocsBackend(WikiBackend):
         port: int = 8000,
         name: str = "Wiki",
         build: bool = False,
+        bind: str = "127.0.0.1",
     ) -> None:
         self.wiki_dir = wiki_dir
         self.port = port
         self.name = name
         self.build = build
+        self.bind = bind
 
     @property
     def target_name(self) -> str:
@@ -102,7 +104,7 @@ class MkdocsBackend(WikiBackend):
             cmd = [
                 mkdocs, "serve",
                 "--config-file", str(mkdocs_yml),
-                "--dev-addr", f"0.0.0.0:{self.port}",
+                "--dev-addr", f"{self.bind}:{self.port}",
             ]
         print(f"{'Building' if self.build else 'Serving'}: {' '.join(cmd)}")
         import os

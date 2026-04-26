@@ -60,8 +60,17 @@ def test_mkdocs_deploy_serve_calls_mkdocs_serve(tmp_path):
     cmd = mock_run.call_args[0][0]
     cmd_str = " ".join(str(a) for a in cmd)
     assert "mkdocs" in cmd_str and "serve" in cmd_str
-    assert "9000" in cmd_str
+    assert "127.0.0.1:9000" in cmd_str
+    assert "0.0.0.0" not in cmd_str
     assert (tmp_path / "mkdocs.yml").exists()
+
+
+def test_mkdocs_deploy_public_bind_uses_wildcard(tmp_path):
+    b = MkdocsBackend(tmp_path / "wiki", port=9000, build=False, bind="0.0.0.0")
+    with patch("llm_wiki.deploy.mkdocs_backend.subprocess.run") as mock_run:
+        b.deploy(tmp_path / "wiki")
+    cmd_str = " ".join(str(a) for a in mock_run.call_args[0][0])
+    assert "0.0.0.0:9000" in cmd_str
 
 
 def test_mkdocs_deploy_build_calls_mkdocs_build(tmp_path):
