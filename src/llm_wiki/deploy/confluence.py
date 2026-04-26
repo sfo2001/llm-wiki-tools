@@ -47,15 +47,21 @@ class ConfluenceBackend(WikiBackend):
                 return results[0]["id"]
         return None
 
+    @staticmethod
+    def _escape_cdata(content: str) -> str:
+        """Split any ']]>' sequence so it can't terminate the enclosing CDATA section."""
+        return content.replace("]]>", "]]]]><![CDATA[>")
+
     def write_page(self, rel_path: str, content: str) -> None:
         """Push page to Confluence. Prints dry-run message if self.dry_run=True."""
         title = self._title_from_path(rel_path)
         if self.dry_run:
             print(f"[DRY-RUN] Would push: {title}")
             return
+        safe = self._escape_cdata(content)
         storage = (
             "<ac:structured-macro ac:name='noformat'>"
-            f"<ac:plain-text-body><![CDATA[{content}]]></ac:plain-text-body>"
+            f"<ac:plain-text-body><![CDATA[{safe}]]></ac:plain-text-body>"
             "</ac:structured-macro>"
         )
         page_id = self._page_id(title)
