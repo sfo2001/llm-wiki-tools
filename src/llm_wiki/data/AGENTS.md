@@ -32,6 +32,7 @@ cross-referencing, filing, and bookkeeping.
 | lwt deploy --target <t>          | Push wiki/ to output target                    |
 | lwt init <path>                  | Scaffold a new data repo                       |
 | lwt update [--apply] [--force]   | Refresh bundled assets (AGENTS.md, skills/, run.sh) from current lwt |
+| lwt update --tools <wheel>       | Swap in a new lwt version (drops wheel into tools/, prunes old)      |
 
 ## Workflows
 

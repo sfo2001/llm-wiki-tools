@@ -7,6 +7,16 @@ last_updated: 2026-04-26
 
 Append-only log of non-obvious choices. Newest at the top.
 
+## 2026-04-26 — Phase 0: hatch-vcs versioning + wheel-in-tools/ distribution
+
+**Decision:** `llm-wiki-tools` is distributed as a Python wheel. The version is derived from annotated git tags via `hatch-vcs` (no static `version =` in `pyproject.toml`). Each scaffolded wiki repo carries the wheel under `tools/llm_wiki_tools-X.Y.Z-py3-none-any.whl`; `run.sh` and `run.ps1` create a per-wiki `venv/` on first run and pip-install the wheel into it. Updates flow via `lwt update --tools <new.whl>` which drops the new wheel into `tools/` and prunes older ones.
+
+**Why:** The previous "editable install on the developer's machine" model meant wikis silently depended on a path nobody else had. Recipients with no access to PyPI, GitHub, or the internal gitea need a single self-contained tarball — `git clone <wiki-repo>` plus Python 3.11+ should suffice. The wheel-in-`tools/` design satisfies that without introducing a network bootstrap step.
+
+**Alternatives considered:** PyPI publish — rejected (personal tool, no audience there). `pip install git+ssh://gitea/...` — rejected (recipients may have no network access to the gitea). Git bundle (`.bundle` file) — rejected (recipients don't need the source history; wheel is smaller and standard). Vendoring lwt source into each wiki — rejected (no version discipline; multiplies maintenance).
+
+**How this could age badly:** Wheels accumulate in the wiki repo's git history (~30 KB per release × N releases). Mitigation: `--prune` removes the working-tree wheel; git history can be filter-repo'd later if it ever bites. `hatch-vcs` requires git history at build time, so a shallow clone can't build — fine, since recipients install the wheel and never build. Tag discipline is human-enforced; `release.sh` rejects untagged builds, so the only way to ship a `.dev` is to bypass `release.sh` deliberately.
+
 ## 2026-04-26 — `lwt update` Phase 1: hardcoded canonical/customisable taxonomy
 
 **Decision:** `lwt update` uses a two-class file taxonomy hardcoded in `src/llm_wiki/update.py` — **canonical** files (AGENTS.md, skills/, run.sh, run.ps1) overwrite silently on `--apply`; **customisable** files (CLAUDE.md, README.md, templates/, .gitignore, .lwt.env.example) are left alone unless `--force`. No state file, no manifest.

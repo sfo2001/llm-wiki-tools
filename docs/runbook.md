@@ -111,6 +111,43 @@ lwt lint --structural --wiki-dir wiki
 
 ## Common tasks
 
+### Releasing a new lwt version
+
+```bash
+cd /path/to/llm-wiki-tools
+
+# 1. Make changes, commit
+git add ... && git commit -m "..."
+
+# 2. Tag the release (annotated tag → release notes go in the message)
+git tag -a v0.2.0 -m "Phase 0: wheel distribution + self-bootstrapping wikis"
+git push origin main --tags
+
+# 3. Build the wheel — fails on dirty tree or untagged HEAD
+./release.sh
+# → dist/llm_wiki_tools-0.2.0-py3-none-any.whl + matching sdist
+
+# 4. Distribute to each in-use wiki
+lwt update <wiki-path> --tools dist/llm_wiki_tools-0.2.0-py3-none-any.whl --apply
+# In the wiki repo: git diff, then commit the new wheel + asset diffs
+```
+
+The version is derived from `git describe` via `hatch-vcs`. Untagged commits produce `.devN` versions that `release.sh` refuses to ship.
+
+### First-run / fresh deployment of a wiki
+
+A wiki repo with `tools/llm_wiki_tools-X.Y.Z-py3-none-any.whl` committed is fully self-bootstrapping — Python 3.11+ is the only host requirement.
+
+```bash
+# Recipient on a fresh machine:
+git clone <wiki-repo-url> my-wiki
+cd my-wiki
+./run.sh serve
+# → creates venv/, installs from tools/*.whl, serves the wiki at :8000
+```
+
+`run.sh` records the installed wheel filename in `venv/.installed-wheel`. Subsequent runs skip the pip step. Replacing the wheel (e.g. via `lwt update --tools <new.whl>` from another machine, then `git pull`) triggers a reinstall on the next `./run.sh` invocation.
+
 ### Refresh bundled assets in an existing wiki
 
 When `llm-wiki-tools` ships changes to `AGENTS.md`, `skills/`, or the `run.sh` / `run.ps1` wrappers, pull them into a deployed wiki repo with:

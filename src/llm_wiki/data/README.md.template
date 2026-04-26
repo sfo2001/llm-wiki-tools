@@ -7,23 +7,15 @@ Sources live in `raw/`. The AI writes and maintains all wiki pages in `wiki/`.
 
 ## Quick start
 
-### 1. Install lwt (one time)
+### Requirements
 
-**Linux / Mac:**
-```bash
-pip install "llm-wiki-tools[mkdocs]"
-```
+Python 3.11+. That's it — no global `lwt` install, no network access.
 
-**Windows:**
-```powershell
-pip install "llm-wiki-tools[mkdocs]"
-```
-
-Verify: `lwt --version`
+The first `./run.sh` invocation creates a `venv/` inside this directory and installs the bundled wheel from `tools/`. Subsequent runs are instant.
 
 ---
 
-### 2. Drop a source into `raw/`
+### 1. Drop a source into `raw/`
 
 Supported: PDF, Word (.docx), PowerPoint (.pptx), plain text, Markdown, web URLs.
 
@@ -36,7 +28,7 @@ raw/
 
 ---
 
-### 3. Convert it
+### 2. Convert it
 
 **Linux / Mac:**
 ```bash
@@ -53,7 +45,7 @@ It does **not** write any wiki pages — that's the AI's job.
 
 ---
 
-### 4. Let the AI build the wiki pages
+### 3. Let the AI build the wiki pages
 
 Open Claude Code in **this directory**:
 
@@ -70,7 +62,7 @@ wiki pages in `wiki/`.
 
 ---
 
-### 5. Browse the wiki
+### 4. Browse the wiki
 
 **Linux / Mac:**
 ```bash
@@ -100,6 +92,8 @@ To build a static site instead of serving live:
 | `wiki/.tmp/` | lwt | Converted sources waiting to be processed. |
 | `templates/` | Shared | Page templates the AI uses when writing. |
 | `skills/` | lwt | Workflow instructions loaded by Claude automatically. |
+| `tools/` | lwt | Bundled lwt wheel — used by `run.sh` to bootstrap `venv/`. |
+| `venv/` | lwt | Auto-created on first run. Gitignored. |
 | `AGENTS.md` | lwt | AI schema — what the AI is and how it works. |
 | `CLAUDE.md` | lwt | Claude Code configuration — loaded on `claude` startup. |
 | `.lwt.env.example` | You | Copy to `.lwt.env` and fill in credentials (Confluence etc.). |
@@ -121,7 +115,20 @@ To build a static site instead of serving live:
 
 ---
 
+## Updating lwt
+
+When a new version of `lwt` ships:
+
+```bash
+./run.sh update --tools /path/to/llm_wiki_tools-NEW.whl --apply
+git add tools/ AGENTS.md skills/ run.sh run.ps1
+git commit -m "chore: bump lwt to vNEW"
+```
+
+`--tools` drops the new wheel into `tools/` and prunes the old; `--apply` refreshes the bundled assets. Next `./run.sh` invocation reinstalls automatically.
+
+---
+
 ## Sharing this wiki
 
-Zip or git-push the whole directory. The recipient needs to install lwt
-(step 1 above) — everything else is self-contained.
+Zip or git-push the whole directory. Recipients need only Python 3.11+ — `tools/*.whl` makes the rest self-contained.
