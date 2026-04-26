@@ -6,3 +6,6 @@ output/
 __pycache__/
 *.pyc
 .DS_Store
+venv/
+.build/
+# tools/*.whl is intentionally NOT ignored — wheels are committed assets
