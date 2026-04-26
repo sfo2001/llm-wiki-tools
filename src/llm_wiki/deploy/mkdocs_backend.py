@@ -23,7 +23,42 @@ markdown_extensions:
   - pymdownx.superfences
 plugins:
   - search
+hooks:
+  - wiki_hooks.py
 """
+
+_WIKI_HOOKS = '''\
+"""MkDocs hook: resolve [[wikilinks]] to relative markdown paths."""
+import os
+import re
+
+_WIKILINK = re.compile(r\'\\[\\[([^\\]|]+)(?:\\|([^\\]]+))?\\]\\]\')
+
+
+def on_env(env, *, config, files, **kwargs):
+    """Build a slug→src_path index once per build."""
+    config["_wikilink_index"] = {
+        os.path.splitext(os.path.basename(f.src_path))[0]: f.src_path
+        for f in files
+        if f.src_path.endswith(".md")
+    }
+
+
+def on_page_markdown(markdown, *, page, config, files, **kwargs):
+    index = config.get("_wikilink_index", {})
+
+    def _replace(m):
+        target = m.group(1).strip()
+        label = (m.group(2) or target).strip()
+        dest = index.get(target)
+        if dest is None:
+            return f"[[{target}]]"
+        src_dir = os.path.dirname(page.file.src_path)
+        rel = os.path.relpath(dest, src_dir).replace("\\\\", "/")
+        return f"[{label}]({rel})"
+
+    return _WIKILINK.sub(_replace, markdown)
+'''
 
 
 class MkdocsBackend(WikiBackend):
@@ -69,6 +104,13 @@ class MkdocsBackend(WikiBackend):
     def _mkdocs_yml(self) -> Path:
         return self._repo_dir / "mkdocs.yml"
 
+    @staticmethod
+    def _ensure_wiki_hooks(repo_dir: Path) -> None:
+        """Write wiki_hooks.py beside mkdocs.yml if absent."""
+        hooks_path = repo_dir / "wiki_hooks.py"
+        if not hooks_path.exists():
+            hooks_path.write_text(_WIKI_HOOKS, encoding="utf-8")
+
     def _ensure_mkdocs_yml(self, repo_dir: Path | None = None) -> Path:
         """Write mkdocs.yml beside wiki/ if absent. Returns its path."""
         if repo_dir is None:
@@ -89,6 +131,7 @@ class MkdocsBackend(WikiBackend):
 
     def deploy(self, wiki_dir: Path) -> None:
         repo_dir = wiki_dir.parent
+        self._ensure_wiki_hooks(repo_dir)
         mkdocs_yml = self._ensure_mkdocs_yml(repo_dir)
         mkdocs = self._mkdocs_bin()
         if self.build:
