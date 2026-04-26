@@ -1,6 +1,9 @@
+import logging
 import shutil
 import subprocess
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 def _try_pandoc(path: Path) -> str | None:
@@ -36,7 +39,8 @@ def _try_python_pptx(path: Path) -> str | None:
             body = "\n".join(f"- {b}" for b in bullets if b)
             slides.append(f"{heading}\n\n{body}" if body else heading)
         return "\n\n".join(slides) if slides else None
-    except Exception:
+    except Exception as e:
+        logger.debug("python-pptx failed for %s: %s", path, e)
         return None
 
 

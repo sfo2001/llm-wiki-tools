@@ -1,4 +1,8 @@
+import logging
+
 import requests
+
+logger = logging.getLogger(__name__)
 
 _HEADERS = {
     "User-Agent": (
@@ -19,7 +23,8 @@ def _try_trafilatura(url: str) -> str | None:
         result = trafilatura.extract(downloaded, output_format="markdown",
                                      include_links=False)
         return result.strip() if result and result.strip() else None
-    except Exception:
+    except Exception as e:
+        logger.debug("trafilatura failed for %s: %s", url, e)
         return None
 
 
@@ -29,7 +34,8 @@ def _trafilatura_config():
         cfg = use_config()
         cfg.set("DEFAULT", "USER_AGENTS", _HEADERS["User-Agent"])
         return cfg
-    except Exception:
+    except Exception as e:
+        logger.debug("trafilatura config failed: %s", e)
         return None
 
 

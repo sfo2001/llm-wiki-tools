@@ -1,6 +1,9 @@
+import logging
 import shutil
 import subprocess
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 def _try_pandoc(path: Path) -> str | None:
@@ -33,7 +36,8 @@ def _try_python_docx(path: Path) -> str | None:
             else:
                 lines.append(text)
         return "\n\n".join(lines) if lines else None
-    except Exception:
+    except Exception as e:
+        logger.debug("python-docx failed for %s: %s", path, e)
         return None
 
 

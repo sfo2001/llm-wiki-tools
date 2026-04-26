@@ -2,10 +2,10 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from llm_wiki.deploy.base import WikiBackend
+from llm_wiki.deploy.base import FilesystemBackend
 
 
-class LocalBackend(WikiBackend):
+class LocalBackend(FilesystemBackend):
     """Serve wiki/ via local HTTP. write_page() writes directly to filesystem."""
 
     def __init__(self, wiki_dir: Path, port: int = 8080, bind: str = "127.0.0.1") -> None:
@@ -16,16 +16,6 @@ class LocalBackend(WikiBackend):
     @property
     def target_name(self) -> str:
         return "local"
-
-    def write_page(self, rel_path: str, content: str) -> None:
-        path = self.wiki_dir / rel_path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding="utf-8")
-
-    def delete_page(self, rel_path: str) -> None:
-        path = self.wiki_dir / rel_path
-        if path.exists():
-            path.unlink()
 
     def _server_command(self, wiki_dir: Path | None = None) -> list[str]:
         """Return the best available HTTP server command."""

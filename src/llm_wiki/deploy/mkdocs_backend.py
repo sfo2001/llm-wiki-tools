@@ -2,7 +2,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from llm_wiki.deploy.base import WikiBackend
+from llm_wiki.deploy.base import FilesystemBackend
 
 _MKDOCS_YML_TEMPLATE = """\
 site_name: "{name}"
@@ -27,7 +27,7 @@ plugins:
 """
 
 
-class MkdocsBackend(WikiBackend):
+class MkdocsBackend(FilesystemBackend):
     """Build/serve wiki/ as a MkDocs Material site.
 
     write_page() and delete_page() write directly to wiki_dir.
@@ -52,16 +52,6 @@ class MkdocsBackend(WikiBackend):
     @property
     def target_name(self) -> str:
         return "mkdocs"
-
-    def write_page(self, rel_path: str, content: str) -> None:
-        path = self.wiki_dir / rel_path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding="utf-8")
-
-    def delete_page(self, rel_path: str) -> None:
-        path = self.wiki_dir / rel_path
-        if path.exists():
-            path.unlink()
 
     @property
     def _repo_dir(self) -> Path:

@@ -2,10 +2,10 @@ import subprocess
 from pathlib import Path
 from typing import Literal
 
-from llm_wiki.deploy.base import WikiBackend
+from llm_wiki.deploy.base import FilesystemBackend
 
 
-class DockerBackend(WikiBackend):
+class DockerBackend(FilesystemBackend):
     """Deploy wiki/ in Docker. Two modes: volume (live updates) or image (baked snapshot)."""
 
     def __init__(
@@ -25,16 +25,6 @@ class DockerBackend(WikiBackend):
     @property
     def target_name(self) -> str:
         return "docker"
-
-    def write_page(self, rel_path: str, content: str) -> None:
-        path = self.wiki_dir / rel_path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding="utf-8")
-
-    def delete_page(self, rel_path: str) -> None:
-        path = self.wiki_dir / rel_path
-        if path.exists():
-            path.unlink()
 
     def _volume_command(self, wiki_dir: Path) -> list[str]:
         return [

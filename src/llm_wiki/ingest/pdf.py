@@ -1,7 +1,10 @@
+import logging
 import re
 import shutil
 import subprocess
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 def _text_to_md(text: str) -> str:
@@ -31,7 +34,8 @@ def _try_pdfminer(path: Path) -> str | None:
         from pdfminer.high_level import extract_text
         text = extract_text(str(path)).strip()
         return text if text else None
-    except Exception:
+    except Exception as e:
+        logger.debug("pdfminer failed for %s: %s", path, e)
         return None
 
 
@@ -42,7 +46,8 @@ def _try_pypdf(path: Path) -> str | None:
         pages = [p.extract_text() or "" for p in reader.pages]
         text = "\n\n".join(p for p in pages if p.strip())
         return text if text else None
-    except Exception:
+    except Exception as e:
+        logger.debug("pypdf failed for %s: %s", path, e)
         return None
 
 
