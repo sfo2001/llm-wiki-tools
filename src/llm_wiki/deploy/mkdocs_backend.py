@@ -104,4 +104,6 @@ class MkdocsBackend(WikiBackend):
                 "--dev-addr", f"0.0.0.0:{self.port}",
             ]
         print(f"{'Building' if self.build else 'Serving'}: {' '.join(cmd)}")
-        subprocess.run(cmd, check=True, cwd=str(repo_dir))
+        import os
+        env = {**os.environ, "WATCHDOG_USE_POLLING": "1"}
+        subprocess.run(cmd, check=True, cwd=str(repo_dir), env=env)
