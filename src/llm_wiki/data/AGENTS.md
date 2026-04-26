@@ -101,7 +101,12 @@ leads to the same workflow:
 - Every page has YAML frontmatter with traceability fields
 - Frontmatter key for template traceability: `lwt_template: <template-name>.md` (**not** `template:` — that key is reserved by MkDocs and will break the site)
 - Every page footer: lwt version, git hash, date, template name
-- Cross-links: [[page-name]] syntax
+- Cross-links: `[[page-name]]` — resolved by **basename only**. Write
+  `[[meta-harness]]`, not `[[concepts/meta-harness]]`. Section anchors
+  (`[[page#section]]`) are not supported. Pipe-aliases (`[[page|alias]]`)
+  are unreliable — single-word aliases sometimes work, multi-word aliases
+  often don't. Default to plain `[[page]]` and use surrounding prose
+  to provide the display label.
 - Every file ends with exactly one trailing newline (enforced by `lwt lint --newlines`)
 - wiki/index.md: updated on every write, one line per page with summary; additive only
 - wiki/log.md: append-only, entries prefixed `## [YYYY-MM-DD] <op> | <title>`.
