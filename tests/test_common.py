@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from llm_wiki.common import compute_sha, inject_footer, write_tmp
+from llm_wiki.common import compute_sha, inject_footer, validate_ingest_url, write_tmp
 
 
 def test_compute_sha_is_8_chars(tmp_path):
@@ -66,3 +66,46 @@ def test_write_tmp_summary_keys(tmp_path):
     assert "backend" in summary
     assert "source_sha" in summary
     assert summary["sections"] == 1  # one ## heading
+
+
+def test_validate_url_accepts_https():
+    validate_ingest_url("https://example.com/article")
+
+
+def test_validate_url_accepts_http():
+    validate_ingest_url("http://example.com/article")
+
+
+@pytest.mark.parametrize("url", [
+    "file:///etc/passwd",
+    "gopher://example.com/",
+    "javascript:alert(1)",
+    "ftp://example.com/file",
+])
+def test_validate_url_rejects_non_http_schemes(url):
+    with pytest.raises(ValueError, match="scheme"):
+        validate_ingest_url(url)
+
+
+@pytest.mark.parametrize("url", [
+    "http://localhost/x",
+    "http://127.0.0.1:8000/x",
+    "http://10.0.0.5/",
+    "http://192.168.1.1/",
+    "http://172.16.0.1/",
+    "http://169.254.169.254/latest/meta-data/",
+    "http://[::1]/",
+])
+def test_validate_url_rejects_internal_targets(url):
+    with pytest.raises(ValueError, match="internal"):
+        validate_ingest_url(url)
+
+
+def test_validate_url_allow_internal_overrides():
+    validate_ingest_url("http://192.168.1.1/wiki", allow_internal=True)
+    validate_ingest_url("http://localhost:8080/", allow_internal=True)
+
+
+def test_validate_url_rejects_no_host():
+    with pytest.raises(ValueError, match="hostname"):
+        validate_ingest_url("http:///path-only")

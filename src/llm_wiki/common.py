@@ -1,11 +1,45 @@
 import hashlib
+import ipaddress
 import re
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 import yaml
 
 from llm_wiki import __version__, __git_hash__
+
+
+_INTERNAL_HOSTNAMES = {"localhost", "ip6-localhost", "ip6-loopback"}
+
+
+def validate_ingest_url(url: str, *, allow_internal: bool = False) -> None:
+    """Reject URLs unsafe for ingest: non-http(s) schemes, link-local / RFC1918 / loopback hosts.
+
+    Pass allow_internal=True to permit private hosts (e.g. self-hosted Confluence on LAN).
+    """
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(
+            f"Refusing to ingest URL with scheme {parsed.scheme!r}: only http/https allowed."
+        )
+    host = (parsed.hostname or "").lower()
+    if not host:
+        raise ValueError(f"Refusing to ingest URL with no hostname: {url!r}")
+    if allow_internal:
+        return
+    if host in _INTERNAL_HOSTNAMES:
+        raise ValueError(
+            f"Refusing to ingest internal host {host!r}; pass --allow-internal to override."
+        )
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return  # hostname, not a literal IP — DNS not resolved here
+    if ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_reserved:
+        raise ValueError(
+            f"Refusing to ingest internal IP {ip!s}; pass --allow-internal to override."
+        )
 
 
 def compute_sha(path: Path) -> str:

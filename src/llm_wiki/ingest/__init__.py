@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 
 from llm_wiki import __git_hash__, __version__
-from llm_wiki.common import compute_sha, write_tmp
+from llm_wiki.common import compute_sha, validate_ingest_url, write_tmp
 from llm_wiki.ingest import confluence, docx, pdf, pptx, raw, web
 
 EXTENSION_MAP = {
@@ -36,12 +36,14 @@ def ingest_source(
     wiki_dir: Path,
     ingest_command: str,
     output: str | None = None,
+    allow_internal: bool = False,
 ) -> IngestResult:
     """Dispatch source to correct handler; write to wiki/.tmp/ or stdout."""
     source_str = str(source)
     is_url = source_str.startswith("http://") or source_str.startswith("https://")
 
     if is_url:
+        validate_ingest_url(source_str, allow_internal=allow_internal)
         if "/rest/api/content/" in source_str:
             import os
             token = os.environ.get("CONFLUENCE_TOKEN", "")

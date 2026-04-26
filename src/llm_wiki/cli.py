@@ -21,15 +21,20 @@ def main() -> None:
 @click.option("--wiki-dir", default="wiki", show_default=True)
 @click.option("--output", default=None,
               help="Output path for temp file, or '-' for stdout.")
-def ingest(source: str, wiki_dir: str, output: str | None) -> None:
+@click.option("--allow-internal", is_flag=True, default=False,
+              help="Permit URLs pointing at loopback / RFC1918 / link-local hosts.")
+def ingest(source: str, wiki_dir: str, output: str | None, allow_internal: bool) -> None:
     """Convert a source file or URL to markdown in wiki/.tmp/."""
     wiki_path = Path(wiki_dir)
     command = f"lwt ingest {source}" + (f" --output {output}" if output else "")
+    if allow_internal:
+        command += " --allow-internal"
     result: IngestResult = ingest_source(
         source=source,
         wiki_dir=wiki_path,
         ingest_command=command,
         output=output,
+        allow_internal=allow_internal,
     )
     if output == "-":
         return
