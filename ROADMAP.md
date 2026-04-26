@@ -19,7 +19,9 @@ Plans for shipped work live under `docs/superpowers/plans/`. Decisions live in `
 
 ## Planned
 
-### Phase 2 — manifest-tracked updates
+### Update / distribution flow
+
+#### Phase 2 — manifest-tracked updates
 
 **What.** Add `.lwt-manifest.yaml` to every scaffolded wiki, recording `{file → bundled SHA}` at install / last-update time. `lwt update` reclassifies each tracked file as one of:
 
@@ -35,7 +37,7 @@ Plans for shipped work live under `docs/superpowers/plans/`. Decisions live in `
 
 ---
 
-### Phase 3 — three-way merge for customisable files
+#### Phase 3 — three-way merge for customisable files
 
 **What.** When both the bundle and the working copy have diverged from the manifest's known-base SHA, run `git merge-file --diff3` to attempt a clean merge. On conflict, write `<file>.merge-conflict` with markers and exit non-zero so the user resolves explicitly.
 
@@ -47,7 +49,7 @@ Plans for shipped work live under `docs/superpowers/plans/`. Decisions live in `
 
 ---
 
-### Phase 4 — content migrations (not just file copies)
+#### Phase 4 — content migrations (not just file copies)
 
 **What.** Versioned, idempotent migration scripts under `src/llm_wiki/migrations/` rewrite content inside `wiki/**`. Manifest records `applied_migrations: [0001, 0002]`. `lwt update` runs unapplied migrations after the asset refresh.
 
@@ -59,7 +61,7 @@ Plans for shipped work live under `docs/superpowers/plans/`. Decisions live in `
 
 ---
 
-### Phase 5 — `lwt doctor` and deploy awareness
+#### Phase 5 — `lwt doctor` and deploy awareness
 
 **What.** Two pieces:
 
@@ -71,6 +73,28 @@ Plans for shipped work live under `docs/superpowers/plans/`. Decisions live in `
 **Trigger.** ≥3 active wikis (more than test-wiki + one other), or the first time CI/automation needs to gate on update status.
 
 **Rough effort.** ~150 LOC.
+
+---
+
+### Search & retrieval
+
+#### qmd integration — semantic search for large wikis
+
+**What.** Adopt [qmd](https://github.com/tobi/qmd) (Tobi Lütke's hybrid search tool — BM25 + vector ANN + LLM reranking, ships with an MCP server) as the scaling path for `lwt search`. Three increments, ship in order:
+
+1. **Documentation only.** Update `docs/runbook.md` and the bundled `AGENTS.md` / `skills/query.md` so a wiki maintainer knows when to switch from `lwt search` to qmd and how to install it (`claude mcp add --scope user qmd -- npx -y @tobi/qmd`).
+2. **Wrapper command.** `lwt search --backend qmd <query>` shells out to `npx @tobi/qmd query` and returns the same `path:line:score` shape as the BM25 backend, so Claude's `query.md` skill is identical regardless of backend.
+3. **Bundled MCP config (optional).** `lwt init` (or a separate `lwt search-stack qmd`) drops a `.mcp.json` into the wiki repo configuring qmd as a Claude MCP server, so Claude calls qmd directly rather than via `lwt`. Wiki repo becomes the install surface.
+
+**Why.** `lwt search` is BM25Plus only — keyword search with no semantic understanding. Once a wiki has hundreds of pages, synonyms and paraphrasing start missing relevant content. Karpathy's gist names qmd as the recommended scaling tool, and the comparison table in [`test-wiki/wiki/entities/qmd.md`](http://localhost:8000/entities/qmd) makes the tradeoff explicit (~2 GB model footprint + 1-3 s startup latency in exchange for vector + rerank quality).
+
+**Trigger.** Either: wiki crosses ~200-300 pages and missed-search complaints surface; or first user wants Claude to call search via MCP rather than `lwt search` shell-out.
+
+**Rough effort.** Step 1 (docs): ~1 hour. Step 2 (wrapper): ~150 LOC + tests. Step 3 (MCP config bundle): ~50 LOC + a templated `.mcp.json`.
+
+**Resources already available locally:**
+- qmd repo cloned at `/path/to/qmd` — read README directly for current architecture and CLI shape before specifying.
+- Entity page at `test-wiki/wiki/entities/qmd.md` — full comparison vs `lwt search` already documented.
 
 ---
 
