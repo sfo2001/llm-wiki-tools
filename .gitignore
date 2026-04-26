@@ -2,8 +2,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.egg-info/
+build/
 dist/
 .venv/
 wiki/.tmp/
 wiki/.lwt_cache/
 .lwt.env
+src/llm_wiki/_version.py
