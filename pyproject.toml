@@ -5,7 +5,25 @@ build-backend = "hatchling.build"
 [project]
 name = "llm-wiki-tools"
 dynamic = ["version"]
+description = "CLI toolchain (lwt) for LLM-maintained personal knowledge bases — ingest, search, lint, and deploy a compounding markdown wiki."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Stefan Förster", email = "103369858+sfo2001@users.noreply.github.com" }]
 requires-python = ">=3.11"
+keywords = ["llm", "wiki", "knowledge-base", "rag", "markdown", "cli", "mkdocs", "bm25"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Documentation",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
 dependencies = [
     "click>=8.1",
     "pyyaml>=6.0",
@@ -30,6 +48,11 @@ mkdocs = [
     "mkdocs-material>=9.5",
     "mkdocs-roamlinks-plugin>=0.3",
 ]
+
+[project.urls]
+Homepage = "https://github.com/sfo2001/llm-wiki-tools"
+Repository = "https://github.com/sfo2001/llm-wiki-tools"
+Issues = "https://github.com/sfo2001/llm-wiki-tools/issues"
 
 [project.scripts]
 lwt = "llm_wiki.cli:main"
