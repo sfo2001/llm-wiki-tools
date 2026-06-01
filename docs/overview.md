@@ -37,5 +37,3 @@ Deploy also supports `--target local`, `--target docker`, `--target confluence`.
 - Operations: [runbook.md](runbook.md)
 - Decisions: [decisions.md](decisions.md)
 - Source pattern: [`karpathy-llm-wiki.md`](karpathy-llm-wiki.md) (Karpathy's original)
-- System design: [`docs/superpowers/specs/2026-04-15-llm-wiki-design.md`](superpowers/specs/2026-04-15-llm-wiki-design.md)
-- Implementation plans: [`docs/superpowers/plans/2026-04-15-llm-wiki-tools-core.md`](superpowers/plans/2026-04-15-llm-wiki-tools-core.md), [`docs/superpowers/plans/2026-04-15-llm-wiki-tools-deploy.md`](superpowers/plans/2026-04-15-llm-wiki-tools-deploy.md), [`docs/superpowers/plans/2026-04-20-llm-wiki-tools-mkdocs-backend.md`](superpowers/plans/2026-04-20-llm-wiki-tools-mkdocs-backend.md), [`docs/superpowers/plans/2026-04-25-lwt-init-human-scaffold.md`](superpowers/plans/2026-04-25-lwt-init-human-scaffold.md)

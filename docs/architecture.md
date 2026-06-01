@@ -59,7 +59,7 @@ flowchart LR
 | `llm-wiki-tools` | Python package providing the `lwt` CLI, bundled templates, skills, and canonical `AGENTS.md`. Shared across all wiki instances. Located at `/path/to/llm-wiki-tools`. | Git, semver |
 | `llm-wiki-<project>` | One per wiki instance. Contains `raw/`, `wiki/`, `templates/`, and a project-specific `CLAUDE.md`. Created via `lwt init`. | Git, per project |
 
-Design artifacts (pattern document, system-design spec, implementation plans) live in `docs/superpowers/` and `docs/karpathy-llm-wiki.md`.
+The source pattern document lives in `docs/karpathy-llm-wiki.md`; design rationale is recorded in `docs/decisions.md`. (The original implementation plans are preserved in git history.)
 
 ## Runtime dependencies
 

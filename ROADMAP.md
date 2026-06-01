@@ -17,7 +17,7 @@ Post-v0.2.0 (unreleased, rolls into the next tag):
 
 - **2026-05-31** — **Public GitHub release prep.** MIT `LICENSE`, project `README.md`, `SECURITY.md`, `CONTRIBUTING.md`, expanded `pyproject.toml` metadata, and **GitHub Actions CI** (`.github/workflows/ci.yml`) running `pytest` on Python 3.11 / 3.12 / 3.13. Repo published at https://github.com/sfo2001/llm-wiki-tools. (CI was previously a deferred item — it's now shipped, replacing the "personal repo, local suite is enough" stance once the repo went public and needed PR gating.)
 
-Plans for shipped work live under `docs/superpowers/plans/`. Decisions live in `docs/decisions.md`.
+Decisions for shipped work live in `docs/decisions.md`. (The original implementation plans are preserved in git history.)
 
 ---
 

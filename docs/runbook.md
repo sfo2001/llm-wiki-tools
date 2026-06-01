@@ -170,10 +170,10 @@ The wiki name (substituted into `README.md`) is recovered from `# <Name> Wiki` o
 
 ### Update the design
 
-Design artifacts live in `docs/` (moved from `~/devel/llm-wiki`):
+Design artifacts live in `docs/`:
 - `docs/karpathy-llm-wiki.md` — Karpathy's original pattern (read-only reference)
-- `docs/superpowers/specs/2026-04-15-llm-wiki-design.md` — system design
-- `docs/superpowers/plans/` — four implementation plans (all complete as of 2026-04-25)
+- `docs/architecture.md` — current architecture and data flow
+- `docs/decisions.md` — design decision log
 
 ### Backup / restore
 

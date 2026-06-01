@@ -57,15 +57,15 @@ Append-only log of non-obvious choices. Newest at the top.
 
 **Decision:** Added overview / architecture / runbook / decisions to `docs/` and opted the project into the central knowledge base.
 
-**Why:** The idea is captured in a single `llm-wiki.md` plus two plans under `docs/superpowers/`. Without a KB entry, the pattern and design intent are invisible from the wiki index and easy to lose.
+**Why:** The idea is captured in `docs/karpathy-llm-wiki.md`. Without a KB entry, the pattern and design intent are invisible from the wiki index and easy to lose.
 
 **Alternatives considered:** Wait until `lwt` has code to document. Rejected — the design phase is itself worth indexing; the KB handles "Experiment" status explicitly.
 
-**How this could age badly:** Design evolves faster than the docs. Mitigation: architecture.md references the spec files rather than inlining them, so the canonical content stays in `docs/superpowers/specs/`.
+**How this could age badly:** Design evolves faster than the docs. Mitigation: `architecture.md` and this decision log hold the canonical design rationale.
 
 ## 2026-04-15 — two-repo split: tools vs. data
 
-**Decision:** Separate `llm-wiki-tools` (Python package, versioned, shared) from `llm-wiki-<project>` (per-wiki data repo). The CLI (`lwt`) lives in tools; `raw/` and `wiki/` live in data repos. Captured in `docs/superpowers/specs/2026-04-15-llm-wiki-design.md`.
+**Decision:** Separate `llm-wiki-tools` (Python package, versioned, shared) from `llm-wiki-<project>` (per-wiki data repo). The CLI (`lwt`) lives in tools; `raw/` and `wiki/` live in data repos.
 
 **Why:** One toolchain, many wiki instances. Upgrading the CLI should not force-sync every data repo; changing a wiki's content should not require touching the tooling.
 
@@ -75,7 +75,7 @@ Append-only log of non-obvious choices. Newest at the top.
 
 ## 2026-04-15 — LLM owns `wiki/`, CLI does not
 
-**Decision:** `lwt ingest` writes only to `wiki/.tmp/`, never to `wiki/` itself. All wiki-page creation and editing is done by the LLM agent. Captured in `docs/superpowers/specs/2026-04-15-llm-wiki-design.md`.
+**Decision:** `lwt ingest` writes only to `wiki/.tmp/`, never to `wiki/` itself. All wiki-page creation and editing is done by the LLM agent.
 
 **Why:** The value of the wiki is the synthesis, cross-referencing, and editorial judgement — exactly the work the LLM is meant to do. If the CLI writes pages, it competes with the agent and produces low-quality content. The CLI's job is the dumb plumbing (format conversion, indexing, linting) that the LLM would do slowly and inefficiently.
 
@@ -91,4 +91,4 @@ Append-only log of non-obvious choices. Newest at the top.
 
 **Alternatives considered:** Start in `llm-wiki-tools` directly. Rejected — no design to implement yet.
 
-**How this could age badly:** This directory becomes a graveyard if the pattern never ships. Mitigation: the plans under `docs/superpowers/plans/` are task-ordered and actionable; either execute them or archive the project.
+**How this could age badly:** This directory becomes a graveyard if the pattern never ships. Mitigation: the pattern shipped as `lwt-wiki`; the original task-ordered implementation plans are preserved in git history.
