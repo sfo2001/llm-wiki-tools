@@ -39,6 +39,11 @@ and keeps the bookkeeping current. See [`AGENTS.md`](AGENTS.md) for the full age
 
 Requires **Python 3.10+**.
 
+> The PyPI distribution name is **`lwt-wiki`** (the import package is `llm_wiki`,
+> the command is `lwt`). It is not yet published to PyPI — install from Git for now.
+> Note: an unrelated project owns the name `llm-wiki-tools` on PyPI; do **not**
+> `pip install llm-wiki-tools`.
+
 ```bash
 pip install git+https://github.com/sfo2001/llm-wiki-tools.git
 ```

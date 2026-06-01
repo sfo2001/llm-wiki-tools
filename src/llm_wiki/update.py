@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-_WHEEL_RE = re.compile(r"^llm_wiki_tools-[\w.+!-]+-py3-none-any\.whl$")
+_WHEEL_RE = re.compile(r"^lwt_wiki-[\w.+!-]+-py3-none-any\.whl$")
 
 _DATA_DIR = Path(__file__).parent / "data"
 
@@ -115,14 +115,14 @@ def compute_status(target_dir: Path, name: str = "my-wiki") -> list[FileStatus]:
 
 
 def install_wheel(target_dir: Path, wheel_path: Path, *, prune: bool = True) -> Path:
-    """Copy a llm_wiki_tools-*.whl into target_dir/tools/ and (optionally) remove older wheels.
+    """Copy a lwt_wiki-*.whl into target_dir/tools/ and (optionally) remove older wheels.
 
     Returns the deployed wheel path.
     """
     if not _WHEEL_RE.match(wheel_path.name):
         raise ValueError(
-            f"Not a llm-wiki-tools wheel: {wheel_path.name!r}. "
-            f"Expected llm_wiki_tools-X.Y.Z-py3-none-any.whl."
+            f"Not a lwt-wiki wheel: {wheel_path.name!r}. "
+            f"Expected lwt_wiki-X.Y.Z-py3-none-any.whl."
         )
     if not wheel_path.is_file():
         raise FileNotFoundError(wheel_path)
@@ -131,7 +131,7 @@ def install_wheel(target_dir: Path, wheel_path: Path, *, prune: bool = True) -> 
     tools_dir.mkdir(parents=True, exist_ok=True)
 
     if prune:
-        for old in tools_dir.glob("llm_wiki_tools-*.whl"):
+        for old in tools_dir.glob("lwt_wiki-*.whl"):
             if old.name != wheel_path.name:
                 old.unlink()
 

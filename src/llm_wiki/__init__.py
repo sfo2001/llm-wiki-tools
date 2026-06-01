@@ -3,7 +3,7 @@ import subprocess
 from importlib.metadata import version, PackageNotFoundError
 
 try:
-    __version__ = version("llm-wiki-tools")
+    __version__ = version("lwt-wiki")
 except PackageNotFoundError:
     __version__ = "dev"
 

@@ -120,7 +120,7 @@ To build a static site instead of serving live:
 When a new version of `lwt` ships:
 
 ```bash
-./run.sh update --tools /path/to/llm_wiki_tools-NEW.whl --apply
+./run.sh update --tools /path/to/lwt_wiki-NEW.whl --apply
 git add tools/ AGENTS.md skills/ run.sh run.ps1
 git commit -m "chore: bump lwt to vNEW"
 ```

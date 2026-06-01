@@ -14,10 +14,10 @@ $WheelDir = Join-Path $ScriptDir "tools"
 $Marker = Join-Path $Venv ".installed-wheel"
 
 # Locate newest wheel
-$Wheel = Get-ChildItem -Path $WheelDir -Filter "llm_wiki_tools-*.whl" -ErrorAction SilentlyContinue |
+$Wheel = Get-ChildItem -Path $WheelDir -Filter "lwt_wiki-*.whl" -ErrorAction SilentlyContinue |
     Sort-Object LastWriteTime -Descending | Select-Object -First 1
 if (-not $Wheel) {
-    Write-Error "No wheel found in $WheelDir\. Drop a llm_wiki_tools-*.whl there and re-run."
+    Write-Error "No wheel found in $WheelDir\. Drop a lwt_wiki-*.whl there and re-run."
     exit 1
 }
 

@@ -418,24 +418,24 @@ def test_lwt_init_without_wheel_warns(tmp_path):
 
 
 def test_lwt_init_with_wheel_copies_it(tmp_path):
-    wheel = tmp_path / "llm_wiki_tools-0.1.0-py3-none-any.whl"
+    wheel = tmp_path / "lwt_wiki-0.1.0-py3-none-any.whl"
     wheel.write_bytes(b"PK\x03\x04")
     target = tmp_path / "wiki"
     result = CliRunner().invoke(main, [
         "init", str(target), "--wheel", str(wheel),
     ])
     assert result.exit_code == 0, result.output
-    assert (target / "tools" / "llm_wiki_tools-0.1.0-py3-none-any.whl").exists()
+    assert (target / "tools" / "lwt_wiki-0.1.0-py3-none-any.whl").exists()
 
 
 def test_lwt_init_with_wheel_does_not_warn(tmp_path):
-    wheel = tmp_path / "llm_wiki_tools-0.1.0-py3-none-any.whl"
+    wheel = tmp_path / "lwt_wiki-0.1.0-py3-none-any.whl"
     wheel.write_bytes(b"PK")
     result = CliRunner().invoke(main, [
         "init", str(tmp_path / "wiki"), "--wheel", str(wheel),
     ])
     assert result.exit_code == 0
-    assert "Drop a llm_wiki_tools" not in result.output
+    assert "Drop a lwt_wiki" not in result.output
 
 
 def test_lwt_init_with_invalid_wheel_rejects(tmp_path):

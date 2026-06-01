@@ -29,7 +29,7 @@ rm -rf dist/ build/
 .venv/bin/python -m build
 
 # 5. Confirm wheel filename matches tag
-EXPECTED="llm_wiki_tools-${TAG#v}-py3-none-any.whl"
+EXPECTED="lwt_wiki-${TAG#v}-py3-none-any.whl"
 if [[ ! -f "dist/$EXPECTED" ]]; then
     echo "✗ expected dist/$EXPECTED but got:" >&2
     ls dist/ >&2

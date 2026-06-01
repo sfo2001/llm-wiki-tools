@@ -165,10 +165,10 @@ def test_cli_update_clean_repo_reports_no_changes(tmp_path):
 def test_install_wheel_copies_to_tools(tmp_path):
     from llm_wiki.update import install_wheel
     target = _scaffold(tmp_path)
-    fake = tmp_path / "llm_wiki_tools-0.2.0-py3-none-any.whl"
+    fake = tmp_path / "lwt_wiki-0.2.0-py3-none-any.whl"
     fake.write_bytes(b"PK\x03\x04fake")
     dest = install_wheel(target, fake)
-    assert dest == target / "tools" / "llm_wiki_tools-0.2.0-py3-none-any.whl"
+    assert dest == target / "tools" / "lwt_wiki-0.2.0-py3-none-any.whl"
     assert dest.read_bytes() == b"PK\x03\x04fake"
 
 
@@ -176,21 +176,21 @@ def test_install_wheel_prunes_older_wheels(tmp_path):
     from llm_wiki.update import install_wheel
     target = _scaffold(tmp_path)
     (target / "tools").mkdir(exist_ok=True)
-    (target / "tools" / "llm_wiki_tools-0.1.0-py3-none-any.whl").write_bytes(b"old")
-    new_wheel = tmp_path / "llm_wiki_tools-0.2.0-py3-none-any.whl"
+    (target / "tools" / "lwt_wiki-0.1.0-py3-none-any.whl").write_bytes(b"old")
+    new_wheel = tmp_path / "lwt_wiki-0.2.0-py3-none-any.whl"
     new_wheel.write_bytes(b"new")
     install_wheel(target, new_wheel, prune=True)
     wheels = sorted((target / "tools").glob("*.whl"))
     assert len(wheels) == 1
-    assert wheels[0].name == "llm_wiki_tools-0.2.0-py3-none-any.whl"
+    assert wheels[0].name == "lwt_wiki-0.2.0-py3-none-any.whl"
 
 
 def test_install_wheel_no_prune_keeps_old(tmp_path):
     from llm_wiki.update import install_wheel
     target = _scaffold(tmp_path)
     (target / "tools").mkdir(exist_ok=True)
-    (target / "tools" / "llm_wiki_tools-0.1.0-py3-none-any.whl").write_bytes(b"old")
-    new_wheel = tmp_path / "llm_wiki_tools-0.2.0-py3-none-any.whl"
+    (target / "tools" / "lwt_wiki-0.1.0-py3-none-any.whl").write_bytes(b"old")
+    new_wheel = tmp_path / "lwt_wiki-0.2.0-py3-none-any.whl"
     new_wheel.write_bytes(b"new")
     install_wheel(target, new_wheel, prune=False)
     wheels = sorted((target / "tools").glob("*.whl"))
@@ -201,11 +201,11 @@ def test_install_wheel_creates_tools_dir_if_missing(tmp_path):
     from llm_wiki.update import install_wheel
     target = _scaffold(tmp_path)
     # tools/ doesn't exist yet
-    wheel = tmp_path / "llm_wiki_tools-0.2.0-py3-none-any.whl"
+    wheel = tmp_path / "lwt_wiki-0.2.0-py3-none-any.whl"
     wheel.write_bytes(b"PK")
     install_wheel(target, wheel)
     assert (target / "tools").is_dir()
-    assert (target / "tools" / "llm_wiki_tools-0.2.0-py3-none-any.whl").exists()
+    assert (target / "tools" / "lwt_wiki-0.2.0-py3-none-any.whl").exists()
 
 
 def test_install_wheel_rejects_non_lwt_wheel(tmp_path):
@@ -213,37 +213,37 @@ def test_install_wheel_rejects_non_lwt_wheel(tmp_path):
     target = _scaffold(tmp_path)
     bogus = tmp_path / "totally-different-pkg-1.0-py3-none-any.whl"
     bogus.write_bytes(b"PK")
-    with pytest.raises(ValueError, match="llm-wiki-tools wheel"):
+    with pytest.raises(ValueError, match="lwt-wiki wheel"):
         install_wheel(target, bogus)
 
 
 def test_install_wheel_rejects_non_file(tmp_path):
     from llm_wiki.update import install_wheel
     target = _scaffold(tmp_path)
-    missing = tmp_path / "llm_wiki_tools-9.9.9-py3-none-any.whl"
+    missing = tmp_path / "lwt_wiki-9.9.9-py3-none-any.whl"
     with pytest.raises(FileNotFoundError):
         install_wheel(target, missing)
 
 
 def test_cli_update_tools_copies_wheel(tmp_path):
     target = _scaffold(tmp_path)
-    wheel = tmp_path / "llm_wiki_tools-0.3.0-py3-none-any.whl"
+    wheel = tmp_path / "lwt_wiki-0.3.0-py3-none-any.whl"
     wheel.write_bytes(b"PK\x03\x04")
     result = CliRunner().invoke(
         main, ["update", str(target), "--tools", str(wheel)],
     )
     assert result.exit_code == 0, result.output
-    assert (target / "tools" / "llm_wiki_tools-0.3.0-py3-none-any.whl").exists()
+    assert (target / "tools" / "lwt_wiki-0.3.0-py3-none-any.whl").exists()
 
 
 def test_cli_update_tools_combines_with_apply(tmp_path):
     target = _scaffold(tmp_path)
     (target / "AGENTS.md").write_text("stale\n")
-    wheel = tmp_path / "llm_wiki_tools-0.3.0-py3-none-any.whl"
+    wheel = tmp_path / "lwt_wiki-0.3.0-py3-none-any.whl"
     wheel.write_bytes(b"PK")
     result = CliRunner().invoke(
         main, ["update", str(target), "--apply", "--tools", str(wheel)],
     )
     assert result.exit_code == 0, result.output
-    assert (target / "tools" / "llm_wiki_tools-0.3.0-py3-none-any.whl").exists()
+    assert (target / "tools" / "lwt_wiki-0.3.0-py3-none-any.whl").exists()
     assert (target / "AGENTS.md").read_text() != "stale\n"

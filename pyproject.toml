@@ -3,7 +3,9 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "llm-wiki-tools"
+# PyPI distribution name. NOT "llm-wiki-tools" — that name is already taken on
+# PyPI by an unrelated project. Import package stays `llm_wiki`; command stays `lwt`.
+name = "lwt-wiki"
 dynamic = ["version"]
 description = "CLI toolchain (lwt) for LLM-maintained personal knowledge bases — ingest, search, lint, and deploy a compounding markdown wiki."
 readme = "README.md"

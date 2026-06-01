@@ -11,10 +11,10 @@ WHEEL_DIR="$SCRIPT_DIR/tools"
 MARKER="$VENV/.installed-wheel"
 
 # Locate newest wheel
-WHEEL=$(ls -t "$WHEEL_DIR"/llm_wiki_tools-*.whl 2>/dev/null | head -1 || true)
+WHEEL=$(ls -t "$WHEEL_DIR"/lwt_wiki-*.whl 2>/dev/null | head -1 || true)
 if [[ -z "$WHEEL" ]]; then
     echo "✗ No wheel found in $WHEEL_DIR/" >&2
-    echo "  Drop a llm_wiki_tools-*.whl into tools/ and re-run." >&2
+    echo "  Drop a lwt_wiki-*.whl into tools/ and re-run." >&2
     exit 1
 fi
 WHEEL_NAME=$(basename "$WHEEL")
