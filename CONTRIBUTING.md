@@ -4,7 +4,7 @@ Thanks for your interest in contributing! This document covers the basics.
 
 ## Development setup
 
-Requires **Python 3.11+**.
+Requires **Python 3.10+**.
 
 ```bash
 git clone https://github.com/sfo2001/llm-wiki-tools.git
@@ -20,7 +20,7 @@ pytest            # full suite
 pytest -q         # quiet
 ```
 
-CI runs the suite on Python 3.11, 3.12, and 3.13. Please make sure tests pass
+CI runs the suite on Python 3.10, 3.11, 3.12, and 3.13. Please make sure tests pass
 locally before opening a pull request, and add tests for new behavior.
 
 ## Pull requests

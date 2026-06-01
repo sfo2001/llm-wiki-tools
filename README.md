@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/sfo2001/llm-wiki-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/sfo2001/llm-wiki-tools/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 
 A design pattern and CLI toolchain (`lwt`) for **personal knowledge bases that an LLM
 incrementally builds and maintains** — a persistent wiki of interlinked markdown files,
@@ -37,7 +37,7 @@ and keeps the bookkeeping current. See [`AGENTS.md`](AGENTS.md) for the full age
 
 ## Install
 
-Requires **Python 3.11+**.
+Requires **Python 3.10+**.
 
 ```bash
 pip install git+https://github.com/sfo2001/llm-wiki-tools.git
