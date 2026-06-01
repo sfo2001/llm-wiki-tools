@@ -13,6 +13,10 @@ Newest at the top.
 | **v0.2.0** | 2026-04-26 | **Phase 0** — `hatch-vcs` versioning, `release.sh` wheel pipeline, `run.sh` / `run.ps1` self-bootstrap from `tools/*.whl`, `lwt update --tools <wheel>`, `lwt init --wheel <path>`. **Phase 1** — `lwt update [--apply] [--force]` refreshes bundled assets using a hardcoded canonical / customisable taxonomy. |
 | **v0.1.0** | 2026-04-26 | Initial CLI: ingest, search, lint, deploy, init, log-entry. Four deploy backends (local, mkdocs, docker, confluence). Six ingest handlers (pdf, docx, pptx, raw, web, confluence). |
 
+Post-v0.2.0 (unreleased, rolls into the next tag):
+
+- **2026-05-31** — **Public GitHub release prep.** MIT `LICENSE`, project `README.md`, `SECURITY.md`, `CONTRIBUTING.md`, expanded `pyproject.toml` metadata, and **GitHub Actions CI** (`.github/workflows/ci.yml`) running `pytest` on Python 3.11 / 3.12 / 3.13. Repo published at https://github.com/sfo2001/llm-wiki-tools. (CI was previously a deferred item — it's now shipped, replacing the "personal repo, local suite is enough" stance once the repo went public and needed PR gating.)
+
 Plans for shipped work live under `docs/superpowers/plans/`. Decisions live in `docs/decisions.md`.
 
 ---
@@ -104,7 +108,6 @@ Plans for shipped work live under `docs/superpowers/plans/`. Decisions live in `
 |---|---|---|
 | `print()` → `click.echo()` in deploy backends | Audit recommendation; current `print()` is correct for user-visible CLI status; converting buys little | Anyone reports broken output redirection or wants `--quiet` |
 | `CHANGELOG.md` | Annotated git tags substitute (`git log v0.1.0..v0.2.0`); minimal personal audience | External audience grows or release notes get long enough that `git log` is unwieldy |
-| CI / pre-push test gate | Personal repo; full local suite runs in 4 s; `release.sh` rejects dirty trees | First regression slips past local discipline |
 | Confluence `ConfluenceClient` shared between ingest + deploy modules | DRY win identified in audit; both currently work | Either side gains its second piece of duplicated logic, or auth/header handling needs to evolve |
 | Pandoc subprocess pattern shared helper across `ingest/{docx,pptx,raw}.py` | DRY win identified in audit; pattern repeats 4× but is short | A new pandoc-using ingest handler is added (N=5+) or the call shape changes |
 
