@@ -57,7 +57,9 @@ def test_modifying_prior_header_text_flagged(repo):
     log.write_text("# Log\n\n## [2026-04-01] ingest | First\n")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "init")
-    log.write_text("# Log\n\n## [2026-04-01] ingest | First — edited\n")
+    log.write_text(
+        "# Log\n\n## [2026-04-01] ingest | First — edited\n", encoding="utf-8"
+    )
     findings = check_log_append_only(repo / "wiki")
     assert len(findings) == 1
 

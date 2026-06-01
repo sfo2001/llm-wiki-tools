@@ -12,7 +12,7 @@ def test_mkdocs_write_page_creates_file(tmp_path):
     b = MkdocsBackend(tmp_path / "wiki")
     b.write_page("concepts/foo.md", "# Foo\n\nContent.")
     assert (tmp_path / "wiki" / "concepts" / "foo.md").exists()
-    assert "# Foo" in (tmp_path / "wiki" / "concepts" / "foo.md").read_text()
+    assert "# Foo" in (tmp_path / "wiki" / "concepts" / "foo.md").read_text(encoding="utf-8")
 
 
 def test_mkdocs_write_page_creates_parents(tmp_path):
@@ -38,7 +38,7 @@ def test_mkdocs_ensure_creates_yml_if_absent(tmp_path):
     b._ensure_mkdocs_yml()
     yml_path = tmp_path / "mkdocs.yml"
     assert yml_path.exists()
-    content = yml_path.read_text()
+    content = yml_path.read_text(encoding="utf-8")
     assert "My Research" in content
     assert "material" in content
     assert "docs_dir: wiki" in content
@@ -49,7 +49,7 @@ def test_mkdocs_ensure_skips_if_yml_exists(tmp_path):
     existing.write_text("site_name: Custom\n")
     b = MkdocsBackend(tmp_path / "wiki")
     b._ensure_mkdocs_yml()
-    assert "Custom" in existing.read_text()  # must not overwrite
+    assert "Custom" in existing.read_text(encoding="utf-8")  # must not overwrite
 
 
 def test_mkdocs_deploy_serve_calls_mkdocs_serve(tmp_path):

@@ -42,9 +42,9 @@ def test_write_tmp_creates_file(tmp_path):
     )
 
     assert out_path.exists()
-    assert "---" in out_path.read_text()
-    assert "pdf.pdftotext" in out_path.read_text()
-    assert "# Report" in out_path.read_text()
+    assert "---" in out_path.read_text(encoding="utf-8")
+    assert "pdf.pdftotext" in out_path.read_text(encoding="utf-8")
+    assert "# Report" in out_path.read_text(encoding="utf-8")
 
 
 def test_write_tmp_summary_keys(tmp_path):

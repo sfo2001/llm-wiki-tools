@@ -1,4 +1,7 @@
 import os
+import sys
+
+import pytest
 from click.testing import CliRunner
 from llm_wiki.cli import main
 
@@ -55,7 +58,9 @@ def test_lwt_search(tmp_path):
 def test_lwt_lint_clean_wiki(tmp_path):
     wiki_dir = tmp_path / "wiki"
     wiki_dir.mkdir()
-    (wiki_dir / "index.md").write_text("# Index\n\n- [[page-a]] — Page A\n")
+    (wiki_dir / "index.md").write_text(
+        "# Index\n\n- [[page-a]] — Page A\n", encoding="utf-8"
+    )
     (wiki_dir / "page-a.md").write_text("# Page A\n\nContent.\n")
     result = CliRunner().invoke(main, ["lint", "--structural",
                                        "--wiki-dir", str(wiki_dir)])
@@ -66,12 +71,14 @@ def test_lwt_lint_clean_wiki(tmp_path):
 def test_lwt_lint_writes_report_and_exits_nonzero(tmp_path):
     wiki_dir = tmp_path / "wiki"
     wiki_dir.mkdir()
-    (wiki_dir / "index.md").write_text("# Index\n\n- [[missing]] — Gone\n")
+    (wiki_dir / "index.md").write_text(
+        "# Index\n\n- [[missing]] — Gone\n", encoding="utf-8"
+    )
     result = CliRunner().invoke(main, ["lint", "--structural",
                                        "--wiki-dir", str(wiki_dir)])
     assert result.exit_code != 0
     assert (wiki_dir / "lint-report.md").exists()
-    assert "missing" in (wiki_dir / "lint-report.md").read_text()
+    assert "missing" in (wiki_dir / "lint-report.md").read_text(encoding="utf-8")
 
 
 def test_lwt_lint_requires_a_check_flag(tmp_path):
@@ -89,18 +96,20 @@ def test_lwt_lint_newlines_flag(tmp_path):
     result = CliRunner().invoke(main, ["lint", "--newlines",
                                        "--wiki-dir", str(wiki_dir)])
     assert result.exit_code != 0
-    assert "missing_newline" in (wiki_dir / "lint-report.md").read_text()
+    assert "missing_newline" in (wiki_dir / "lint-report.md").read_text(encoding="utf-8")
 
 
 def test_lwt_lint_all_flag_runs_every_check(tmp_path):
     wiki_dir = tmp_path / "wiki"
     wiki_dir.mkdir()
-    (wiki_dir / "index.md").write_text("# Index\n\n- [[missing]] — Gone\n")
+    (wiki_dir / "index.md").write_text(
+        "# Index\n\n- [[missing]] — Gone\n", encoding="utf-8"
+    )
     (wiki_dir / "a.md").write_bytes(b"# A")
     result = CliRunner().invoke(main, ["lint", "--all",
                                        "--wiki-dir", str(wiki_dir)])
     assert result.exit_code != 0
-    report = (wiki_dir / "lint-report.md").read_text()
+    report = (wiki_dir / "lint-report.md").read_text(encoding="utf-8")
     assert "missing_page" in report
     assert "missing_newline" in report
 
@@ -121,7 +130,7 @@ def test_lwt_log_entry_appends_to_log(tmp_path):
         "--wiki-dir", str(wiki_dir),
     ])
     assert result.exit_code == 0, result.output
-    log = (wiki_dir / "log.md").read_text()
+    log = (wiki_dir / "log.md").read_text(encoding="utf-8")
     assert "ingest | AI 2027" in log
     assert "- Source: https://ai-2027.com" in log
 
@@ -132,13 +141,13 @@ def test_lwt_log_entry_does_not_overwrite_prior(tmp_path):
     (wiki_dir / "log.md").write_text(
         "# Log\n\n## [2026-04-25] ingest | First\n\n- detail\n"
     )
-    before = (wiki_dir / "log.md").read_text()
+    before = (wiki_dir / "log.md").read_text(encoding="utf-8")
     result = CliRunner().invoke(main, [
         "log-entry", "--op", "ingest", "--title", "Second",
         "--wiki-dir", str(wiki_dir),
     ])
     assert result.exit_code == 0, result.output
-    after = (wiki_dir / "log.md").read_text()
+    after = (wiki_dir / "log.md").read_text(encoding="utf-8")
     assert after.startswith(before.rstrip("\n"))
     assert "ingest | Second" in after
 
@@ -156,7 +165,7 @@ def test_lwt_log_entry_body_file_stdin(tmp_path):
         input="- piped body line\n",
     )
     assert result.exit_code == 0, result.output
-    assert "- piped body line" in (wiki_dir / "log.md").read_text()
+    assert "- piped body line" in (wiki_dir / "log.md").read_text(encoding="utf-8")
 
 
 def test_lwt_lint_append_only_ref_flag(tmp_path):
@@ -183,7 +192,7 @@ def test_lwt_lint_append_only_ref_flag(tmp_path):
         "--wiki-dir", str(wiki),
     ])
     assert result.exit_code != 0
-    assert "HEAD~1" in (wiki / "lint-report.md").read_text()
+    assert "HEAD~1" in (wiki / "lint-report.md").read_text(encoding="utf-8")
 
 
 def test_lwt_log_entry_rejects_body_and_body_file(tmp_path):
@@ -276,13 +285,13 @@ def test_lwt_init_index_contains_name(tmp_path):
     CliRunner().invoke(main, [
         "init", str(tmp_path / "wiki"), "--name", "My Project",
     ])
-    index = (tmp_path / "wiki" / "wiki" / "index.md").read_text()
+    index = (tmp_path / "wiki" / "wiki" / "index.md").read_text(encoding="utf-8")
     assert "My Project" in index
 
 
 def test_lwt_init_gitignore_excludes_tmp(tmp_path):
     CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
-    gitignore = (tmp_path / "wiki" / ".gitignore").read_text()
+    gitignore = (tmp_path / "wiki" / ".gitignore").read_text(encoding="utf-8")
     assert "wiki/.tmp/" in gitignore
 
 
@@ -355,7 +364,7 @@ def test_lwt_init_skills_has_four_files(tmp_path):
 def test_lwt_init_skills_ingest_not_empty(tmp_path):
     result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
     assert result.exit_code == 0, result.output
-    content = (tmp_path / "wiki" / "skills" / "ingest.md").read_text()
+    content = (tmp_path / "wiki" / "skills" / "ingest.md").read_text(encoding="utf-8")
     assert "lwt ingest" in content
 
 
@@ -370,7 +379,7 @@ def test_lwt_init_creates_readme(tmp_path):
 def test_lwt_init_readme_contains_name(tmp_path):
     result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki"), "--name", "My Research"])
     assert result.exit_code == 0, result.output
-    content = (tmp_path / "wiki" / "README.md").read_text()
+    content = (tmp_path / "wiki" / "README.md").read_text(encoding="utf-8")
     assert "My Research" in content
     assert "__NAME__" not in content
 
@@ -378,7 +387,7 @@ def test_lwt_init_readme_contains_name(tmp_path):
 def test_lwt_init_readme_contains_run_sh(tmp_path):
     result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
     assert result.exit_code == 0, result.output
-    content = (tmp_path / "wiki" / "README.md").read_text()
+    content = (tmp_path / "wiki" / "README.md").read_text(encoding="utf-8")
     assert "run.sh" in content
 
 
@@ -390,6 +399,9 @@ def test_lwt_init_creates_run_sh(tmp_path):
     assert (tmp_path / "wiki" / "run.sh").exists()
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="POSIX execute bit not modeled on Windows"
+)
 def test_lwt_init_run_sh_is_executable(tmp_path):
     result = CliRunner().invoke(main, ["init", str(tmp_path / "wiki")])
     assert result.exit_code == 0, result.output

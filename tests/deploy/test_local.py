@@ -13,7 +13,7 @@ def test_local_write_page_creates_file(tmp_path):
     b = LocalBackend(tmp_path / "wiki")
     b.write_page("concepts/foo.md", "# Foo\n\nContent.")
     assert (tmp_path / "wiki" / "concepts" / "foo.md").exists()
-    assert "# Foo" in (tmp_path / "wiki" / "concepts" / "foo.md").read_text()
+    assert "# Foo" in (tmp_path / "wiki" / "concepts" / "foo.md").read_text(encoding="utf-8")
 
 
 def test_local_write_page_creates_parents(tmp_path):

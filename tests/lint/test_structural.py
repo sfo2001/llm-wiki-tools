@@ -10,7 +10,8 @@ def broken_wiki(tmp_path):
     d = tmp_path / "wiki"
     d.mkdir()
     (d / "index.md").write_text(
-        "# Index\n\n- [[page-a]] — exists\n- [[missing-page]] — gone\n"
+        "# Index\n\n- [[page-a]] — exists\n- [[missing-page]] — gone\n",
+        encoding="utf-8",
     )
     (d / "page-a.md").write_text(
         "# Page A\n\nSee [[broken-link]] and [[missing-page]].\n"

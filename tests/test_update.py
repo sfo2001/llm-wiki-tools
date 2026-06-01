@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 import pytest
 from click.testing import CliRunner
@@ -77,7 +78,7 @@ def test_apply_skips_customisable_without_force(tmp_path):
     (target / "CLAUDE.md").write_text("custom\n")
     written = apply_update(target, force=False, name="Test")
     assert "CLAUDE.md" not in [w.rel_path for w in written]
-    assert (target / "CLAUDE.md").read_text() == "custom\n"
+    assert (target / "CLAUDE.md").read_text(encoding="utf-8") == "custom\n"
 
 
 def test_apply_overwrites_customisable_with_force(tmp_path):
@@ -95,6 +96,9 @@ def test_apply_restores_missing_canonical_file(tmp_path):
     assert (target / "run.sh").exists()
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="POSIX file modes not modeled on Windows"
+)
 def test_apply_chmods_run_sh(tmp_path):
     target = _scaffold(tmp_path)
     (target / "run.sh").write_text("stale\n")
@@ -129,7 +133,7 @@ def test_cli_update_dry_run_default(tmp_path):
     assert result.exit_code == 0
     assert "AGENTS.md" in result.output
     assert "differs" in result.output
-    assert (target / "AGENTS.md").read_text() == "stale\n"
+    assert (target / "AGENTS.md").read_text(encoding="utf-8") == "stale\n"
 
 
 def test_cli_update_apply_writes_canonical(tmp_path):
@@ -137,21 +141,21 @@ def test_cli_update_apply_writes_canonical(tmp_path):
     (target / "AGENTS.md").write_text("stale\n")
     result = CliRunner().invoke(main, ["update", str(target), "--apply"])
     assert result.exit_code == 0
-    assert (target / "AGENTS.md").read_text() != "stale\n"
+    assert (target / "AGENTS.md").read_text(encoding="utf-8") != "stale\n"
 
 
 def test_cli_update_apply_skips_customisable(tmp_path):
     target = _scaffold(tmp_path)
     (target / "CLAUDE.md").write_text("mine\n")
     CliRunner().invoke(main, ["update", str(target), "--apply"])
-    assert (target / "CLAUDE.md").read_text() == "mine\n"
+    assert (target / "CLAUDE.md").read_text(encoding="utf-8") == "mine\n"
 
 
 def test_cli_update_force_overwrites_customisable(tmp_path):
     target = _scaffold(tmp_path)
     (target / "CLAUDE.md").write_text("mine\n")
     CliRunner().invoke(main, ["update", str(target), "--apply", "--force"])
-    assert (target / "CLAUDE.md").read_text() != "mine\n"
+    assert (target / "CLAUDE.md").read_text(encoding="utf-8") != "mine\n"
 
 
 def test_cli_update_clean_repo_reports_no_changes(tmp_path):
@@ -246,4 +250,4 @@ def test_cli_update_tools_combines_with_apply(tmp_path):
     )
     assert result.exit_code == 0, result.output
     assert (target / "tools" / "lwt_wiki-0.3.0-py3-none-any.whl").exists()
-    assert (target / "AGENTS.md").read_text() != "stale\n"
+    assert (target / "AGENTS.md").read_text(encoding="utf-8") != "stale\n"

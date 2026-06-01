@@ -54,7 +54,8 @@ def wiki_dir(tmp_path) -> Path:
     d = tmp_path / "wiki"
     d.mkdir()
     (d / "index.md").write_text(
-        "# Index\n\n- [[page-a]] — Page A summary\n- [[page-b]] — Page B summary\n"
+        "# Index\n\n- [[page-a]] — Page A summary\n- [[page-b]] — Page B summary\n",
+        encoding="utf-8",
     )
     (d / "page-a.md").write_text("# Page A\n\nLinks to [[page-b]].\n")
     (d / "page-b.md").write_text("# Page B\n\nNo outbound links.\n")

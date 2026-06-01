@@ -13,7 +13,7 @@ def test_docker_write_page(tmp_path):
     b = DockerBackend(tmp_path / "wiki")
     b.write_page("page.md", "# Page")
     assert (tmp_path / "wiki" / "page.md").exists()
-    assert "# Page" in (tmp_path / "wiki" / "page.md").read_text()
+    assert "# Page" in (tmp_path / "wiki" / "page.md").read_text(encoding="utf-8")
 
 
 def test_docker_delete_page(tmp_path):

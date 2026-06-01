@@ -37,7 +37,7 @@ def test_search_cache_is_valid_json(wiki_dir):
     import json
     search(wiki_dir, "page", n=5)
     cache = wiki_dir / ".lwt_cache" / "bm25_cache.json"
-    data = json.loads(cache.read_text())
+    data = json.loads(cache.read_text(encoding="utf-8"))
     assert "pages" in data
     assert "corpus" in data
 
