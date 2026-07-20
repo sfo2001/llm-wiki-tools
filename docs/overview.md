@@ -35,5 +35,5 @@ Deploy also supports `--target local`, `--target docker`, `--target confluence`.
 
 - Architecture: [architecture.md](architecture.md)
 - Operations: [runbook.md](runbook.md)
-- Decisions: [decisions.md](decisions.md)
+- Decisions: [adr/](adr/)
 - Source pattern: [`karpathy-llm-wiki.md`](karpathy-llm-wiki.md) (Karpathy's original)
