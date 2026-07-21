@@ -109,6 +109,7 @@ the condition, not just the worry — an unfalsifiable worry never gets closed.
 - **No `CHANGELOG.md`** — annotated git tags (`git log v0.1.0..v0.2.0`) substitute today; minimal personal audience. Revisit if an external audience grows, or release notes get long enough that `git log` is unwieldy.
 - **Confluence `ConfluenceClient` not shared between `ingest` and `deploy` modules** — a DRY win identified in a prior audit; both currently work standalone. Revisit if either side gains a second piece of duplicated logic, or auth/header handling needs to evolve.
 - **Pandoc subprocess pattern not factored into a shared helper across `ingest/{docx,pptx,raw}.py`** — the pattern repeats 4× but each instance is short. Revisit if a new pandoc-using ingest handler is added (N=5+), or the call shape changes.
+- **`run.sh` / `run.ps1` wrappers drifting from the `lwt` CLI** — if the wrapper commands diverge from the actual CLI they become misleading. Safe today because the wrappers are thin: they add `--wiki-dir "$SCRIPT_DIR/wiki"` and delegate everything else to `lwt`. Revisit if a wrapper ever grows logic of its own beyond that delegation. _(Recovered from the 2026-04-25 "Plan 4: human-facing scaffold additions" entry, which was dropped in the 2026-07-20 decisions.md migration and has no corresponding ADR.)_
 
 ---
 
