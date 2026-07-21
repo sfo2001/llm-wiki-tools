@@ -30,14 +30,14 @@ locally before opening a pull request, and add tests for new behavior.
 3. Follow the existing code style and conventions.
 4. Use clear commit messages (Conventional Commits style is appreciated,
    e.g. `fix(ingest): handle empty PDF pages`).
-5. Update relevant docs in `docs/` and `ROADMAP.md` when behavior changes.
+5. Update relevant docs in `docs/` and `docs/roadmap.md` when behavior changes.
 6. Open the PR with a description of *what* changed and *why*.
 
 ## Architecture & conventions
 
 - [`docs/architecture.md`](docs/architecture.md) — component layout and data flow.
-- [`docs/decisions.md`](docs/decisions.md) — design decision log; add an entry
-  for non-obvious choices.
+- [`docs/adr/`](docs/adr/) — architecture decision records; add one for
+  non-obvious choices.
 - [`AGENTS.md`](AGENTS.md) — the agent/wiki contract that governs `wiki/` layout.
 
 ## Reporting bugs

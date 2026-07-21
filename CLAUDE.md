@@ -5,7 +5,7 @@
 @path skills/lint.md
 @path skills/deploy.md
 
-> **Roadmap:** [`ROADMAP.md`](ROADMAP.md) tracks planned phases — the deploy / update / distribution flow (manifest, three-way merge, content migrations, `lwt doctor`) and the search & retrieval story (qmd integration for large wikis) — plus deliberately deferred items. Read it before extending those areas, and update it when shipping a phase or killing one.
+> **Roadmap:** [`docs/roadmap.md`](docs/roadmap.md) tracks open questions and known future work — the deploy / update / distribution flow (manifest, three-way merge, content migrations, `lwt doctor`) and the search & retrieval story (qmd integration for large wikis) — plus watch items to revisit later. Read it before extending those areas, and update it when settling an open question or shipping a phase.
 
 ---
 

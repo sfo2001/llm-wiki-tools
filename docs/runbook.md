@@ -173,7 +173,8 @@ The wiki name (substituted into `README.md`) is recovered from `# <Name> Wiki` o
 Design artifacts live in `docs/`:
 - `docs/karpathy-llm-wiki.md` — Karpathy's original pattern (read-only reference)
 - `docs/architecture.md` — current architecture and data flow
-- `docs/decisions.md` — design decision log
+- `docs/adr/` — architecture decision records
+- `docs/roadmap.md` — open questions and known future work
 
 ### Backup / restore
 

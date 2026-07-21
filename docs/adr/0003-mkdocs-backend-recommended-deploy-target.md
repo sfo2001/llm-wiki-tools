@@ -5,3 +5,7 @@
 `lwt deploy --target mkdocs` (MkDocs Material) is now the recommended deploy target, replacing `--target local`. The bare local HTTP server had no full-text search and rendered raw markdown, whereas MkDocs Material gives search, theming, code highlighting, and anchor navigation with zero configuration beyond `pip install llm-wiki-tools[mkdocs]`; `MkdocsBackend` auto-generates `mkdocs.yml` on first run and never overwrites a user-customised one.
 
 **Considered Options:** keeping `LocalBackend` as the default and offering mkdocs as an extra was rejected — a bare-bones local server shouldn't be the recommended path.
+
+## Consequences
+
+If the user customises `mkdocs.yml` heavily, `lwt deploy` will use it as-is (correct). If `mkdocs-material` changes its config schema, the bundled template may need updating.

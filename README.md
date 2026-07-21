@@ -97,7 +97,7 @@ Deploy backends: local files, Docker, [MkDocs Material](https://squidfunk.github
 - [Architecture](docs/architecture.md) — components and data flow
 - [Runbook](docs/runbook.md) — day-to-day operations
 - [Decisions](docs/adr/) — architecture decision records
-- [Roadmap](ROADMAP.md) — planned phases and deferred items
+- [Roadmap](docs/roadmap.md) — open questions, known future work, and watch items
 
 ## Development
 
