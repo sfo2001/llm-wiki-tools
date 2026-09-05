@@ -113,10 +113,11 @@ weaker/local model can author `wiki/` directly; the client landed in this PR pro
 mechanism for the semantic-quality half of that fallback (duplicates, missed cross-references,
 weak synthesis) that deterministic validation can't catch.
 
-**Deferred because.** The client itself needed to exist and pass its own review first (this PR).
-For ingest-time quality specifically, try the cheaper option — self-review instructions in
-`skills/ingest.md` — before reaching for this client at all (Gitea #5); only build
-`ingest --review` if self-review proves insufficient in practice.
+**Deferred because.** The client itself needed to exist and pass its own review first (that
+landed; see ADR-0007). The cheaper ingest-time-quality option — a self-review step in
+`skills/ingest.md` — has since shipped (Gitea #5, commit `369d066`): duplicate/link/frontmatter
+checks before finalizing, no new infrastructure. `lwt maintain` and `ingest --review` remain
+undone. Only build `ingest --review` if self-review proves insufficient in practice.
 
 **Rough effort.** `lwt maintain`: ~100-150 LOC (Gitea #3) — reads lint findings, calls
 `LLMClient.complete()`, applies the result. `ingest --review`: ~50-80 LOC on top of that, only if
@@ -131,6 +132,7 @@ the condition, not just the worry — an unfalsifiable worry never gets closed.
 - **No `CHANGELOG.md`** — annotated git tags (`git log v0.1.0..v0.2.0`) substitute today; minimal personal audience. Revisit if an external audience grows, or release notes get long enough that `git log` is unwieldy.
 - **Confluence `ConfluenceClient` not shared between `ingest` and `deploy` modules** — a DRY win identified in a prior audit; both currently work standalone. Revisit if either side gains a second piece of duplicated logic, or auth/header handling needs to evolve.
 - **Pandoc subprocess pattern not factored into a shared helper across `ingest/{docx,pptx,raw}.py`** — the pattern repeats 4× but each instance is short. Revisit if a new pandoc-using ingest handler is added (N=5+), or the call shape changes.
+- **Root `skills/*.md` vs bundled `src/llm_wiki/data/skills/*.md` require manual double-editing** — `skills/ingest.md` at repo root (this repo's own dogfooded copy, loaded via this project's `CLAUDE.md`) already drifted once from the canonical bundled copy that `lwt init`/`lwt update` actually ships (it missed the `lwt log-entry`/`lwt lint --append-only` steps added in `285d1ac`/`e42be1a`). Revisit if a second skill file drifts the same way, or consider generating the root copy from the bundled one at dev-tooling time instead of hand-syncing.
 - **`run.sh` / `run.ps1` wrappers drifting from the `lwt` CLI** — if the wrapper commands diverge from the actual CLI they become misleading. Safe today because the wrappers are thin: they add `--wiki-dir "$SCRIPT_DIR/wiki"` and delegate everything else to `lwt`. Revisit if a wrapper ever grows logic of its own beyond that delegation. _(Recovered from the 2026-04-25 "Plan 4: human-facing scaffold additions" entry, which was dropped in the 2026-07-20 decisions.md migration and has no corresponding ADR.)_
 
 ---

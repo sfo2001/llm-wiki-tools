@@ -25,8 +25,19 @@ When a user adds a source to raw/ and asks you to process it.
 7. Select template: `source-summary.md` for ingested sources
 8. Write/update wiki pages — copy traceability frontmatter from temp file header
 9. Typical scope: 1 source-summary page + 3–10 entity/concept updates
-10. Update `wiki/index.md` (additive only — never remove prior entries)
-11. Append to `wiki/log.md` via the CLI, never by hand-editing:
+10. **Self-review before finalizing** — no new tooling, do this yourself before moving on:
+    - **Duplicate check:** re-read `wiki/index.md`. If a page you just wrote covers the same
+      concept as an existing entry, merge into the existing page instead of leaving both.
+    - **Link check:** for every `[[page-name]]` you wrote, confirm a file with that basename
+      exists under `wiki/` (a page you just created in this pass counts) —
+      `lwt lint --structural` catches any that don't.
+    - **Frontmatter check:** confirm every field from "Traceability frontmatter" below is
+      present on every page you wrote, with no placeholder value left in.
+
+    If self-review finds nothing to fix, say so explicitly rather than skipping the step
+    silently.
+11. Update `wiki/index.md` (additive only — never remove prior entries)
+12. Append to `wiki/log.md` via the CLI, never by hand-editing:
     ```
     lwt log-entry --op ingest --title "<source title>" --body-file - <<'EOF'
     - Source: <path-or-url>
@@ -34,7 +45,7 @@ When a user adds a source to raw/ and asks you to process it.
     - Wiki pages created (N): ...
     EOF
     ```
-12. Verify: `lwt lint --append-only --newlines --wiki-dir wiki` → exit 0
+13. Verify: `lwt lint --append-only --newlines --wiki-dir wiki` → exit 0
 
 ## Traceability frontmatter
 
