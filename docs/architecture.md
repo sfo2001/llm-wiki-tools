@@ -1,6 +1,6 @@
 ---
 project: llm-wiki-tools
-last_updated: 2026-04-26
+last_updated: 2026-09-05
 ---
 
 # llm-wiki-tools — Architecture
@@ -112,7 +112,8 @@ Optional extras:
 - **Development:** local laptop — `lwt ingest / search / lint / init` work today.
 - **Serving:** `lwt deploy --target mkdocs --build` for static site; `lwt deploy --target docker` for HTTPS container on tardis.
 - **Config files:** `.lwt.env` (credentials, gitignored) plus `AGENTS.md` / `CLAUDE.md` in the data repo.
-- **Secrets:** `.lwt.env` — Confluence PAT, any future API tokens.
+- **Secrets:** `.lwt.env` — Confluence PAT, `LLM_API_KEY`/`LLM_FALLBACK_API_KEY` for
+  `src/llm_wiki/llm_client.py` (ADR-0007; not yet wired into a CLI command).
 - **Default ports:** mkdocs `8000`, local `8080`, docker `8443`.
 
 ## Related docs
