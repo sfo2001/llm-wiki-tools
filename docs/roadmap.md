@@ -1,6 +1,6 @@
 ---
 project: llm-wiki-tools
-last_updated: 2026-07-20
+last_updated: 2026-09-05
 ---
 
 # llm-wiki-tools — Roadmap
@@ -99,6 +99,28 @@ deferred — a deferral without a reason is indistinguishable from an oversight.
 **Resources already available locally:**
 - qmd repo cloned at `/path/to/qmd` — read README directly for current architecture and CLI shape before specifying.
 - Entity page at `test-wiki/wiki/entities/qmd.md` — full comparison vs `lwt search` already documented.
+
+### Unattended maintenance & ingest review
+
+**What.** Wire `src/llm_wiki/llm_client.py` (the provider-agnostic LLM client, ADR-0007) into
+two consumers: `lwt maintain` — a periodic pass that reads `wiki/lint-report.md`-style findings
+(orphans, broken links, likely-duplicate concepts) and asks the configured LLM to fix them — and,
+if needed, an `lwt ingest --review` step that sanity-checks a freshly authored page before it's
+considered done.
+
+**Why.** ADR-0006 activated write-time structural validation as a mandatory fallback once a
+weaker/local model can author `wiki/` directly; the client landed in this PR provides the
+mechanism for the semantic-quality half of that fallback (duplicates, missed cross-references,
+weak synthesis) that deterministic validation can't catch.
+
+**Deferred because.** The client itself needed to exist and pass its own review first (this PR).
+For ingest-time quality specifically, try the cheaper option — self-review instructions in
+`skills/ingest.md` — before reaching for this client at all (Gitea #5); only build
+`ingest --review` if self-review proves insufficient in practice.
+
+**Rough effort.** `lwt maintain`: ~100-150 LOC (Gitea #3) — reads lint findings, calls
+`LLMClient.complete()`, applies the result. `ingest --review`: ~50-80 LOC on top of that, only if
+needed.
 
 ## Watch items
 
